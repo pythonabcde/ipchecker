@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="IP地址检测工具 - 通过多个检测源查询您的IP地址">
+    <title>IP地址检测</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            padding: 20px 0;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .summary-title {
+            font-size: 1.2rem;
+            color: #667eea;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .ip-display {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #333;
+            text-align: center;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            word-break: break-all;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .checks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .check-item {
+            background: white;
+            border-radius: 10px;
+            padding: 18px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border-left: 4px solid #e2e8f0;
+        }
+
+        .check-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .check-item.success {
+            border-left-color: #48bb78;
+        }
+
+        .check-item.error {
+            border-left-color: #f56565;
+        }
+
+        .check-item.loading {
+            border-left-color: #4299e1;
+        }
+
+        .check-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .check-name {
+            font-weight: 600;
+            font-size: 1rem;
+            color: #2d3748;
+        }
+
+        .check-flag {
+            font-size: 1.2rem;
+        }
+
+        .check-status {
+            font-size: 0.85rem;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        .status-loading {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .status-success {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .status-error {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .check-result {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #667eea;
+            margin: 10px 0;
+            word-break: break-all;
+        }
+
+        .check-time {
+            font-size: 0.8rem;
+            color: #718096;
+        }
+
+        .check-error {
+            font-size: 0.9rem;
+            color: #e53e3e;
+            margin-top: 8px;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #e2e8f0;
+            border-top-color: #4299e1;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        footer {
+            text-align: center;
+            color: white;
+            margin-top: 40px;
+            padding: 20px;
+            opacity: 0.8;
+        }
+
+        footer a {
+            color: white;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(255,255,255,0.5);
+        }
+
+        footer a:hover {
+            border-bottom-color: white;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .subtitle {
+                font-size: 1rem;
+            }
+
+            .ip-display {
+                font-size: 1.5rem;
+                padding: 15px;
+            }
+
+            .checks-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                gap: 10px;
+            }
+
+            .stat-number {
+                font-size: 1.5rem;
+            }
+
+            .summary-card {
+                padding: 18px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .ip-display {
+                font-size: 1.2rem;
+            }
+
+            .check-result {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌐 IP地址检测</h1>
+            <p class="subtitle">通过多个检测源查询您的IP地址</p>
+        </header>
+
+        <div class="summary-card">
+            <div class="summary-title">您的IP地址</div>
+            <div class="ip-display" id="mainIP">检测中...</div>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-number" id="successCount">0</div>
+                    <div class="stat-label">成功</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="failCount">0</div>
+                    <div class="stat-label">失败</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="totalCount">0</div>
+                    <div class="stat-label">总数</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="checks-grid" id="checksGrid"></div>
+
+        <footer>
+            <p>Powered by Multiple IP Detection Services</p>
+            <p style="margin-top: 10px; font-size: 0.9rem;">
+                <a href="https://github.com" target="_blank">GitHub</a>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // IP检测源配置（20+个检测源，中国8+个）
+        const ipCheckers = [
+            // 国际检测源
+            {
+                name: 'ipify',
+                flag: '🌍',
+                country: 'US',
+                url: 'https://api.ipify.org?format=json',
+                parser: data => data.ip
+            },
+            {
+                name: 'ipapi.co',
+                flag: '🌍',
+                country: 'US',
+                url: 'https://ipapi.co/json/',
+                parser: data => data.ip
+            },
+            {
+                name: 'ip-api',
+                flag: '🌍',
+                country: 'US',
+                url: 'http://ip-api.com/json/',
+                parser: data => data.query
+            },
+            {
+                name: 'seeip',
+                flag: '🌍',
+                country: 'US',
+                url: 'https://api.seeip.org/jsonip',
+                parser: data => data.ip
+            },
+            {
+                name: 'ipinfo.io',
+                flag: '🌍',
+                country: 'US',
+                url: 'https://ipinfo.io/json',
+                parser: data => data.ip
+            },
+            {
+                name: 'cloudflare',
+                flag: '🌍',
+                country: 'US',
+                url: 'https://1.1.1.1/cdn-cgi/trace',
+                parser: data => {
+                    const match = data.match(/ip=([^\n]+)/);
+                    return match ? match[1] : null;
+                },
+                isText: true
+            },
+            {
+                name: 'icanhazip',
+                flag: '🌍',
+                country: 'US',
+                url: 'https://icanhazip.com',
+                parser: data => data.trim(),
+                isText: true
+            },
+            {
+                name: 'ident.me',
+                flag: '🌍',
+                country: 'US',
+                url: 'https://api.ident.me',
+                parser: data => data.trim(),
+                isText: true
+            },
+            {
+                name: 'ipecho',
+                flag: '🌍',
+                country: 'US',
+                url: 'https://ipecho.net/plain',
+                parser: data => data.trim(),
+                isText: true
+            },
+            {
+                name: 'myexternalip',
+                flag: '🌍',
+                country: 'US',
+                url: 'https://api.myexternalip.com/json',
+                parser: data => data.ip
+            },
+            {
+                name: 'wtfismyip',
+                flag: '🌍',
+                country: 'US',
+                url: 'https://wtfismyip.com/json',
+                parser: data => data.YourFuckingIPAddress
+            },
+            {
+                name: 'freeipapi',
+                flag: '🌍',
+                country: 'US',
+                url: 'https://freeipapi.com/api/json',
+                parser: data => data.ipAddress
+            },
+            // 中国检测源
+            {
+                name: 'ip.sb',
+                flag: '🇨🇳',
+                country: 'CN',
+                url: 'https://api.ip.sb/ip',
+                parser: data => data.trim(),
+                isText: true
+            },
+            {
+                name: 'cip.cc',
+                flag: '🇨🇳',
+                country: 'CN',
+                url: 'https://api.cip.cc/',
+                parser: data => data.trim(),
+                isText: true
+            },
+            {
+                name: 'pconline',
+                flag: '🇨🇳',
+                country: 'CN',
+                url: 'https://whois.pconline.com.cn/ipJson.jsp',
+                parser: data => {
+                    const match = data.match(/"ip":"([^"]+)"/);
+                    return match ? match[1] : null;
+                },
+                isText: true
+            },
+            {
+                name: 'ipip.net',
+                flag: '🇨🇳',
+                country: 'CN',
+                url: 'https://myip.ipip.net/json',
+                parser: data => data.data.ip
+            },
+            {
+                name: 'chinaz',
+                flag: '🇨🇳',
+                country: 'CN',
+                url: 'https://ip.tool.chinaz.com/ajaxsync.aspx',
+                parser: data => {
+                    const match = data.match(/\d+\.\d+\.\d+\.\d+/);
+                    return match ? match[0] : null;
+                },
+                isText: true
+            },
+            {
+                name: 'ip138',
+                flag: '🇨🇳',
+                country: 'CN',
+                url: 'https://api.ip138.com/ip/',
+                parser: data => data.data ? data.data[0] : null
+            },
+            {
+                name: 'vore',
+                flag: '🇨🇳',
+                country: 'CN',
+                url: 'https://api.vore.top/api/IPdata',
+                parser: data => data.ipinfo.text
+            },
+            {
+                name: 'tencent',
+                flag: '🇨🇳',
+                country: 'CN',
+                url: 'https://apis.map.qq.com/ws/location/v1/ip?output=jsonp',
+                parser: data => {
+                    const match = data.match(/"ip":"([^"]+)"/);
+                    return match ? match[1] : null;
+                },
+                isText: true,
+                needsProxy: true
+            },
+            {
+                name: 'ipw.cn',
+                flag: '🇨🇳',
+                country: 'CN',
+                url: 'https://ipw.cn/api/ip/myip',
+                parser: data => data.IP
+            },
+            // 更多国际源
+            {
+                name: 'bigdatacloud',
+                flag: '🌍',
+                country: 'US',
+                url: 'https://api.bigdatacloud.net/data/client-ip',
+                parser: data => data.ipString
+            },
+            {
+                name: 'ip.nf',
+                flag: '🌍',
+                country: 'US',
+                url: 'https://api.ip.nf/me.json',
+                parser: data => data.ip.ip
+            }
+        ];
+
+        let successCount = 0;
+        let failCount = 0;
+        let totalCount = ipCheckers.length;
+        let detectedIPs = {};
+        let mostCommonIP = null;
+
+        // 创建检测项DOM
+        function createCheckItem(checker) {
+            const div = document.createElement('div');
+            div.className = 'check-item loading';
+            div.id = `check-${checker.name}`;
+            div.innerHTML = `
+                <div class="check-header">
+                    <div>
+                        <span class="check-flag">${checker.flag}</span>
+                        <span class="check-name">${checker.name}</span>
+                    </div>
+                    <span class="check-status status-loading">
+                        <span class="spinner"></span> 检测中
+                    </span>
+                </div>
+                <div class="check-result">-</div>
+                <div class="check-time"></div>
+            `;
+            return div;
+        }
+
+        // 更新统计信息
+        function updateStats() {
+            document.getElementById('successCount').textContent = successCount;
+            document.getElementById('failCount').textContent = failCount;
+            document.getElementById('totalCount').textContent = totalCount;
+
+            // 计算最常见的IP
+            if (Object.keys(detectedIPs).length > 0) {
+                mostCommonIP = Object.keys(detectedIPs).reduce((a, b) =>
+                    detectedIPs[a] > detectedIPs[b] ? a : b
+                );
+                document.getElementById('mainIP').textContent = mostCommonIP;
+            }
+        }
+
+        // 执行IP检测
+        async function checkIP(checker) {
+            const startTime = Date.now();
+            const checkElement = document.getElementById(`check-${checker.name}`);
+
+            try {
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 10000); // 10秒超时
+
+                const response = await fetch(checker.url, {
+                    signal: controller.signal,
+                    mode: 'cors',
+                    cache: 'no-cache'
+                });
+
+                clearTimeout(timeout);
+
+                let data;
+                if (checker.isText) {
+                    data = await response.text();
+                } else {
+                    data = await response.json();
+                }
+
+                const ip = checker.parser(data);
+                const duration = Date.now() - startTime;
+
+                if (ip && /^(\d{1,3}\.){3}\d{1,3}$|^([0-9a-f]{0,4}:){2,7}[0-9a-f]{0,4}$/.test(ip)) {
+                    // 成功
+                    successCount++;
+                    detectedIPs[ip] = (detectedIPs[ip] || 0) + 1;
+
+                    checkElement.className = 'check-item success';
+                    checkElement.querySelector('.check-status').className = 'check-status status-success';
+                    checkElement.querySelector('.check-status').textContent = '✓ 成功';
+                    checkElement.querySelector('.check-result').textContent = ip;
+                    checkElement.querySelector('.check-time').textContent = `响应时间: ${duration}ms`;
+                } else {
+                    throw new Error('无效的IP格式');
+                }
+            } catch (error) {
+                // 失败
+                failCount++;
+                checkElement.className = 'check-item error';
+                checkElement.querySelector('.check-status').className = 'check-status status-error';
+                checkElement.querySelector('.check-status').textContent = '✗ 失败';
+                checkElement.querySelector('.check-result').textContent = '-';
+                checkElement.querySelector('.check-time').innerHTML = `
+                    <span class="check-error">${error.message === 'The user aborted a request.' ? '请求超时' : error.message}</span>
+                `;
+            }
+
+            updateStats();
+        }
+
+        // 初始化
+        function init() {
+            const grid = document.getElementById('checksGrid');
+
+            // 创建所有检测项
+            ipCheckers.forEach(checker => {
+                grid.appendChild(createCheckItem(checker));
+            });
+
+            // 并发执行所有检测
+            ipCheckers.forEach(checker => {
+                checkIP(checker);
+            });
+
+            updateStats();
+        }
+
+        // 页面加载完成后执行
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>
