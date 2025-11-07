@@ -21,7 +21,7 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
         }
 
@@ -96,105 +96,102 @@
             margin-top: 5px;
         }
 
-        .checks-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .check-item {
+        .table-container {
             background: white;
-            border-radius: 10px;
-            padding: 18px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-            border-left: 4px solid #e2e8f0;
-        }
-
-        .check-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-        }
-
-        .check-item.success {
-            border-left-color: #48bb78;
-        }
-
-        .check-item.error {
-            border-left-color: #f56565;
-        }
-
-        .check-item.loading {
-            border-left-color: #4299e1;
-        }
-
-        .check-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-
-        .check-name {
-            font-weight: 600;
-            font-size: 1rem;
-            color: #2d3748;
-        }
-
-        .check-flag {
-            font-size: 1.2rem;
-        }
-
-        .check-status {
-            font-size: 0.85rem;
-            padding: 4px 10px;
             border-radius: 12px;
-            font-weight: 500;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+
+        thead {
+            background: #667eea;
+            color: white;
+        }
+
+        th {
+            padding: 15px 10px;
+            text-align: left;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #e2e8f0;
+            transition: background-color 0.2s;
+        }
+
+        tbody tr:hover {
+            background-color: #f7fafc;
+        }
+
+        tbody tr.success {
+            background-color: #f0fff4;
+        }
+
+        tbody tr.error {
+            background-color: #fff5f5;
+        }
+
+        td {
+            padding: 12px 10px;
+            vertical-align: middle;
+        }
+
+        .source-cell {
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .source-flag {
+            font-size: 1.2rem;
+            margin-right: 5px;
+        }
+
+        .ip-cell {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            color: #667eea;
         }
 
         .status-loading {
-            background: #bee3f8;
-            color: #2c5282;
+            color: #4299e1;
         }
 
         .status-success {
-            background: #c6f6d5;
-            color: #22543d;
+            color: #48bb78;
         }
 
         .status-error {
-            background: #fed7d7;
-            color: #742a2a;
+            color: #f56565;
         }
 
-        .check-result {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: #667eea;
-            margin: 10px 0;
-            word-break: break-all;
-        }
-
-        .check-time {
-            font-size: 0.8rem;
+        .time-info {
+            font-size: 0.85rem;
             color: #718096;
+            margin-top: 3px;
         }
 
-        .check-error {
+        .location-cell {
+            color: #555;
             font-size: 0.9rem;
-            color: #e53e3e;
-            margin-top: 8px;
         }
 
         .spinner {
             display: inline-block;
-            width: 14px;
-            height: 14px;
+            width: 12px;
+            height: 12px;
             border: 2px solid #e2e8f0;
             border-top-color: #4299e1;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
+            margin-right: 5px;
         }
 
         @keyframes spin {
@@ -221,6 +218,10 @@
 
         /* 移动端适配 */
         @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
             h1 {
                 font-size: 1.8rem;
             }
@@ -234,28 +235,36 @@
                 padding: 15px;
             }
 
-            .checks-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .stats {
-                gap: 10px;
+            .summary-card {
+                padding: 18px;
             }
 
             .stat-number {
                 font-size: 1.5rem;
             }
 
-            .summary-card {
-                padding: 18px;
+            .table-container {
+                padding: 10px;
+            }
+
+            table {
+                font-size: 0.85rem;
+            }
+
+            th, td {
+                padding: 10px 6px;
+            }
+
+            .source-cell {
+                font-size: 0.9rem;
+            }
+
+            .location-cell {
+                font-size: 0.8rem;
             }
         }
 
         @media (max-width: 480px) {
-            body {
-                padding: 10px;
-            }
-
             h1 {
                 font-size: 1.5rem;
             }
@@ -264,8 +273,19 @@
                 font-size: 1.2rem;
             }
 
-            .check-result {
-                font-size: 1.1rem;
+            table {
+                font-size: 0.8rem;
+            }
+
+            th, td {
+                padding: 8px 4px;
+            }
+
+            .location-cell {
+                max-width: 150px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
         }
     </style>
@@ -296,7 +316,19 @@
             </div>
         </div>
 
-        <div class="checks-grid" id="checksGrid"></div>
+        <div class="table-container">
+            <table id="checksTable">
+                <thead>
+                    <tr>
+                        <th>检测源</th>
+                        <th>IP地址</th>
+                        <th>地理位置</th>
+                    </tr>
+                </thead>
+                <tbody id="checksTableBody">
+                </tbody>
+            </table>
+        </div>
 
         <footer>
             <p>Powered by Multiple IP Detection Services</p>
@@ -522,26 +554,64 @@
         let totalCount = ipCheckers.length;
         let detectedIPs = {};
         let mostCommonIP = null;
+        let locationCache = {}; // 缓存地理位置信息
 
-        // 创建检测项DOM
-        function createCheckItem(checker) {
-            const div = document.createElement('div');
-            div.className = 'check-item loading';
-            div.id = `check-${checker.name}`;
-            div.innerHTML = `
-                <div class="check-header">
-                    <div>
-                        <span class="check-flag">${checker.flag}</span>
-                        <span class="check-name">${checker.name}</span>
+        // 创建表格行
+        function createTableRow(checker) {
+            const tr = document.createElement('tr');
+            tr.id = `row-${checker.name}`;
+            tr.innerHTML = `
+                <td class="source-cell">
+                    <span class="source-flag">${checker.flag}</span>
+                    ${checker.name}
+                </td>
+                <td class="ip-cell">
+                    <div class="status-loading">
+                        <span class="spinner"></span>检测中...
                     </div>
-                    <span class="check-status status-loading">
-                        <span class="spinner"></span> 检测中
-                    </span>
-                </div>
-                <div class="check-result">-</div>
-                <div class="check-time"></div>
+                </td>
+                <td class="location-cell">
+                    <span class="status-loading">-</span>
+                </td>
             `;
-            return div;
+            return tr;
+        }
+
+        // 查询IP地理位置
+        async function getIPLocation(ip) {
+            // 先检查缓存
+            if (locationCache[ip]) {
+                return locationCache[ip];
+            }
+
+            try {
+                // 使用ip-api.com查询地理位置（免费，支持CORS）
+                const response = await fetch(`http://ip-api.com/json/${ip}?lang=zh-CN`, {
+                    timeout: 5000
+                });
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    const location = `${data.country} ${data.regionName || ''} ${data.city || ''}`.trim();
+                    locationCache[ip] = location;
+                    return location;
+                }
+            } catch (error) {
+                // 如果失败，尝试使用ipapi.co
+                try {
+                    const response = await fetch(`https://ipapi.co/${ip}/json/`);
+                    const data = await response.json();
+                    const location = `${data.country_name || ''} ${data.region || ''} ${data.city || ''}`.trim();
+                    if (location) {
+                        locationCache[ip] = location;
+                        return location;
+                    }
+                } catch (e) {
+                    // 忽略错误
+                }
+            }
+
+            return '-';
         }
 
         // 更新统计信息
@@ -562,7 +632,9 @@
         // 执行IP检测
         async function checkIP(checker) {
             const startTime = Date.now();
-            const checkElement = document.getElementById(`check-${checker.name}`);
+            const row = document.getElementById(`row-${checker.name}`);
+            const ipCell = row.cells[1];
+            const locationCell = row.cells[2];
 
             try {
                 const controller = new AbortController();
@@ -591,24 +663,25 @@
                     successCount++;
                     detectedIPs[ip] = (detectedIPs[ip] || 0) + 1;
 
-                    checkElement.className = 'check-item success';
-                    checkElement.querySelector('.check-status').className = 'check-status status-success';
-                    checkElement.querySelector('.check-status').textContent = '✓ 成功';
-                    checkElement.querySelector('.check-result').textContent = ip;
-                    checkElement.querySelector('.check-time').textContent = `响应时间: ${duration}ms`;
+                    row.className = 'success';
+                    ipCell.innerHTML = `
+                        <div class="status-success">${ip}</div>
+                        <div class="time-info">响应时间: ${duration}ms</div>
+                    `;
+
+                    // 异步查询地理位置
+                    locationCell.innerHTML = '<span class="status-loading">查询中...</span>';
+                    const location = await getIPLocation(ip);
+                    locationCell.innerHTML = `<span>${location}</span>`;
                 } else {
                     throw new Error('无效的IP格式');
                 }
             } catch (error) {
                 // 失败
                 failCount++;
-                checkElement.className = 'check-item error';
-                checkElement.querySelector('.check-status').className = 'check-status status-error';
-                checkElement.querySelector('.check-status').textContent = '✗ 失败';
-                checkElement.querySelector('.check-result').textContent = '-';
-                checkElement.querySelector('.check-time').innerHTML = `
-                    <span class="check-error">${error.message === 'The user aborted a request.' ? '请求超时' : error.message}</span>
-                `;
+                row.className = 'error';
+                ipCell.innerHTML = `<div class="status-error">检测失败</div>`;
+                locationCell.innerHTML = `<span class="status-error">-</span>`;
             }
 
             updateStats();
@@ -616,11 +689,11 @@
 
         // 初始化
         function init() {
-            const grid = document.getElementById('checksGrid');
+            const tbody = document.getElementById('checksTableBody');
 
-            // 创建所有检测项
+            // 创建所有表格行
             ipCheckers.forEach(checker => {
-                grid.appendChild(createCheckItem(checker));
+                tbody.appendChild(createTableRow(checker));
             });
 
             // 并发执行所有检测
