@@ -339,37 +339,9 @@
     </div>
 
     <script>
-        // IP检测源配置（25个检测源：16个国际 + 9个中国）
+        // IP检测源配置（28个检测源：19个国际 + 9个中国）
         const ipCheckers = [
-            // 国际检测源 - CORS友好且高可用
-            {
-                name: 'ipify',
-                flag: '🌍',
-                country: 'US',
-                url: 'https://api.ipify.org?format=json',
-                parser: data => data.ip
-            },
-            {
-                name: 'api64.ipify',
-                flag: '🌍',
-                country: 'US',
-                url: 'https://api64.ipify.org?format=json',
-                parser: data => data.ip
-            },
-            {
-                name: 'ipapi.co',
-                flag: '🌍',
-                country: 'US',
-                url: 'https://ipapi.co/json/',
-                parser: data => data.ip
-            },
-            {
-                name: 'ip-api',
-                flag: '🌍',
-                country: 'US',
-                url: 'http://ip-api.com/json/',
-                parser: data => data.query
-            },
+            // 国际检测源 - 经过验证支持CORS
             {
                 name: 'seeip',
                 flag: '🌍',
@@ -378,35 +350,10 @@
                 parser: data => data.ip
             },
             {
-                name: 'seeip-ipv6',
-                flag: '🌍',
-                country: 'US',
-                url: 'https://api6.seeip.org/jsonip',
-                parser: data => data.ip
-            },
-            {
-                name: 'ipinfo.io',
-                flag: '🌍',
-                country: 'US',
-                url: 'https://ipinfo.io/json',
-                parser: data => data.ip
-            },
-            {
                 name: 'cloudflare',
                 flag: '🌍',
                 country: 'US',
                 url: 'https://1.1.1.1/cdn-cgi/trace',
-                parser: data => {
-                    const match = data.match(/ip=([^\n]+)/);
-                    return match ? match[1] : null;
-                },
-                isText: true
-            },
-            {
-                name: 'cloudflare-ipv6',
-                flag: '🌍',
-                country: 'US',
-                url: 'https://[2606:4700:4700::1111]/cdn-cgi/trace',
                 parser: data => {
                     const match = data.match(/ip=([^\n]+)/);
                     return match ? match[1] : null;
@@ -438,14 +385,6 @@
                 isText: true
             },
             {
-                name: 'ident.me-ipv6',
-                flag: '🌍',
-                country: 'US',
-                url: 'https://v6.ident.me',
-                parser: data => data.trim(),
-                isText: true
-            },
-            {
                 name: 'icanhazip',
                 flag: '🌍',
                 country: 'US',
@@ -461,10 +400,91 @@
                 parser: data => data.YourFuckingIPAddress
             },
             {
-                name: 'ipify.org-text',
+                name: 'ifconfig.me',
+                flag: '🌍',
+                country: 'US',
+                url: 'https://ifconfig.me/ip',
+                parser: data => data.trim(),
+                isText: true
+            },
+            {
+                name: 'ifconfig.co',
+                flag: '🌍',
+                country: 'US',
+                url: 'https://ifconfig.co/json',
+                parser: data => data.ip
+            },
+            {
+                name: 'ipify',
+                flag: '🌍',
+                country: 'US',
+                url: 'https://api.ipify.org?format=json',
+                parser: data => data.ip
+            },
+            {
+                name: 'ipify-text',
                 flag: '🌍',
                 country: 'US',
                 url: 'https://api.ipify.org',
+                parser: data => data.trim(),
+                isText: true
+            },
+            {
+                name: 'api64.ipify',
+                flag: '🌍',
+                country: 'US',
+                url: 'https://api64.ipify.org?format=json',
+                parser: data => data.ip
+            },
+            {
+                name: 'myip.com',
+                flag: '🌍',
+                country: 'US',
+                url: 'https://api.myip.com',
+                parser: data => data.ip
+            },
+            {
+                name: 'httpbin',
+                flag: '🌍',
+                country: 'US',
+                url: 'https://httpbin.org/ip',
+                parser: data => data.origin?.split(',')[0].trim()
+            },
+            {
+                name: 'ip.guide',
+                flag: '🌍',
+                country: 'US',
+                url: 'https://ip.guide',
+                parser: data => data.trim(),
+                isText: true
+            },
+            {
+                name: 'ipconfig.io',
+                flag: '🌍',
+                country: 'US',
+                url: 'https://ipconfig.io/json',
+                parser: data => data.ip
+            },
+            {
+                name: 'l2.io',
+                flag: '🌍',
+                country: 'US',
+                url: 'https://l2.io/ip.json',
+                parser: data => data.ip
+            },
+            {
+                name: 'ip.tyk.nu',
+                flag: '🌍',
+                country: 'US',
+                url: 'https://ip.tyk.nu',
+                parser: data => data.trim(),
+                isText: true
+            },
+            {
+                name: 'tnedi.me',
+                flag: '🌍',
+                country: 'US',
+                url: 'https://tnedi.me',
                 parser: data => data.trim(),
                 isText: true
             },
@@ -485,55 +505,6 @@
                 parser: data => data.ip
             },
             {
-                name: 'ipw.cn',
-                flag: '🇨🇳',
-                country: 'CN',
-                url: 'https://ipw.cn/api/ip/myip',
-                parser: data => data.IP || data.ip
-            },
-            {
-                name: '64.ipw.cn',
-                flag: '🇨🇳',
-                country: 'CN',
-                url: 'https://64.ipw.cn/api/ip/myip',
-                parser: data => data.IP || data.ip
-            },
-            {
-                name: 'pconline',
-                flag: '🇨🇳',
-                country: 'CN',
-                url: 'https://whois.pconline.com.cn/ipJson.jsp?json=true',
-                parser: data => {
-                    if (typeof data === 'string') {
-                        try {
-                            const jsonData = JSON.parse(data);
-                            return jsonData.ip;
-                        } catch {
-                            const match = data.match(/"ip":"([^"]+)"/);
-                            return match ? match[1] : null;
-                        }
-                    }
-                    return data.ip;
-                },
-                isText: true
-            },
-            {
-                name: 'ip.3322.net',
-                flag: '🇨🇳',
-                country: 'CN',
-                url: 'http://ip.3322.net/',
-                parser: data => data.trim(),
-                isText: true
-            },
-            {
-                name: 'ddnspod',
-                flag: '🇨🇳',
-                country: 'CN',
-                url: 'http://members.3322.org/dyndns/getip',
-                parser: data => data.trim(),
-                isText: true
-            },
-            {
                 name: 'myip.ipip.net',
                 flag: '🇨🇳',
                 country: 'CN',
@@ -541,11 +512,47 @@
                 parser: data => data.data?.ip || data.data?.IP
             },
             {
-                name: 'qifu-api',
+                name: 'ipw.cn',
                 flag: '🇨🇳',
                 country: 'CN',
-                url: 'https://qifu-api.baidubce.com/ip/local/geo/v1/district',
+                url: 'https://ipw.cn/api/ip/myip',
+                parser: data => data.IP || data.ip
+            },
+            {
+                name: 'ip.useragentinfo',
+                flag: '🇨🇳',
+                country: 'CN',
+                url: 'https://ip.useragentinfo.com/json',
                 parser: data => data.ip
+            },
+            {
+                name: 'ip.taobao',
+                flag: '🇨🇳',
+                country: 'CN',
+                url: 'https://ip.taobao.com/outGetIpInfo?accessKey=alibaba-inc',
+                parser: data => data.data?.ip
+            },
+            {
+                name: 'myip.la',
+                flag: '🇨🇳',
+                country: 'CN',
+                url: 'https://api.myip.la/en?json',
+                parser: data => data.ip
+            },
+            {
+                name: 'ip125',
+                flag: '🇨🇳',
+                country: 'CN',
+                url: 'https://www.ip125.com/api/get_my_ip/',
+                parser: data => data.ip
+            },
+            {
+                name: 'cip.cc',
+                flag: '🇨🇳',
+                country: 'CN',
+                url: 'https://ip.cip.cc',
+                parser: data => data.trim(),
+                isText: true
             }
         ];
 
@@ -585,29 +592,51 @@
             }
 
             try {
-                // 使用ip-api.com查询地理位置（免费，支持CORS）
-                const response = await fetch(`http://ip-api.com/json/${ip}?lang=zh-CN`, {
-                    timeout: 5000
+                // 使用ipapi.co查询地理位置（支持HTTPS和CORS）
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 5000);
+
+                const response = await fetch(`https://ipapi.co/${ip}/json/`, {
+                    signal: controller.signal
                 });
+                clearTimeout(timeout);
+
                 const data = await response.json();
 
-                if (data.status === 'success') {
-                    const location = `${data.country} ${data.regionName || ''} ${data.city || ''}`.trim();
-                    locationCache[ip] = location;
-                    return location;
-                }
-            } catch (error) {
-                // 如果失败，尝试使用ipapi.co
-                try {
-                    const response = await fetch(`https://ipapi.co/${ip}/json/`);
-                    const data = await response.json();
+                if (data.country_name) {
                     const location = `${data.country_name || ''} ${data.region || ''} ${data.city || ''}`.trim();
                     if (location) {
                         locationCache[ip] = location;
                         return location;
                     }
+                }
+            } catch (error) {
+                // 如果ipapi.co失败，尝试使用ipinfo.io
+                try {
+                    const response = await fetch(`https://ipinfo.io/${ip}/json`);
+                    const data = await response.json();
+                    if (data.country) {
+                        const location = `${data.country} ${data.region || ''} ${data.city || ''}`.trim();
+                        if (location) {
+                            locationCache[ip] = location;
+                            return location;
+                        }
+                    }
                 } catch (e) {
-                    // 忽略错误
+                    // 最后尝试使用ip-api.com（某些环境可能支持HTTP）
+                    try {
+                        const response = await fetch(`http://ip-api.com/json/${ip}?lang=zh-CN&fields=country,regionName,city`);
+                        const data = await response.json();
+                        if (data.country) {
+                            const location = `${data.country} ${data.regionName || ''} ${data.city || ''}`.trim();
+                            if (location) {
+                                locationCache[ip] = location;
+                                return location;
+                            }
+                        }
+                    } catch (e2) {
+                        // 忽略
+                    }
                 }
             }
 
