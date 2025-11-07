@@ -307,9 +307,9 @@
     </div>
 
     <script>
-        // IP检测源配置（20+个检测源，中国8+个）
+        // IP检测源配置（24个检测源：15个国际 + 9个中国）
         const ipCheckers = [
-            // 国际检测源
+            // 国际检测源 - 高可用性
             {
                 name: 'ipify',
                 flag: '🌍',
@@ -357,51 +357,78 @@
                 isText: true
             },
             {
-                name: 'icanhazip',
+                name: '64.ipw.cn',
                 flag: '🌍',
                 country: 'US',
-                url: 'https://icanhazip.com',
-                parser: data => data.trim(),
-                isText: true
+                url: 'https://64.ipw.cn/api/ip/myip',
+                parser: data => data.IP || data.ip
             },
             {
-                name: 'ident.me',
+                name: 'api64.ipify',
                 flag: '🌍',
                 country: 'US',
-                url: 'https://api.ident.me',
-                parser: data => data.trim(),
-                isText: true
-            },
-            {
-                name: 'ipecho',
-                flag: '🌍',
-                country: 'US',
-                url: 'https://ipecho.net/plain',
-                parser: data => data.trim(),
-                isText: true
-            },
-            {
-                name: 'myexternalip',
-                flag: '🌍',
-                country: 'US',
-                url: 'https://api.myexternalip.com/json',
+                url: 'https://api64.ipify.org?format=json',
                 parser: data => data.ip
             },
             {
-                name: 'wtfismyip',
+                name: 'ifconfig.me',
                 flag: '🌍',
                 country: 'US',
-                url: 'https://wtfismyip.com/json',
-                parser: data => data.YourFuckingIPAddress
+                url: 'https://ifconfig.me/all.json',
+                parser: data => data.ip_addr
             },
             {
-                name: 'freeipapi',
+                name: 'ipdata.co',
                 flag: '🌍',
                 country: 'US',
-                url: 'https://freeipapi.com/api/json',
-                parser: data => data.ipAddress
+                url: 'https://api.ipdata.co?api-key=test',
+                parser: data => data.ip
             },
-            // 中国检测源
+            {
+                name: 'ipgeolocation',
+                flag: '🌍',
+                country: 'US',
+                url: 'https://api.ipgeolocation.io/ipgeo?apiKey=test',
+                parser: data => data.ip
+            },
+            {
+                name: 'ipwhois',
+                flag: '🌍',
+                country: 'US',
+                url: 'http://ipwho.is/',
+                parser: data => data.ip
+            },
+            {
+                name: 'ip.ajaxhttpdownload',
+                flag: '🌍',
+                country: 'US',
+                url: 'https://ip.ajaxhttpdownload.com/',
+                parser: data => data.trim(),
+                isText: true
+            },
+            {
+                name: 'bigdatacloud',
+                flag: '🌍',
+                country: 'US',
+                url: 'https://api.bigdatacloud.net/data/client-ip',
+                parser: data => data.ipString
+            },
+            {
+                name: 'checkip.amazonaws',
+                flag: '🌍',
+                country: 'US',
+                url: 'https://checkip.amazonaws.com/',
+                parser: data => data.trim(),
+                isText: true
+            },
+            // 中国检测源 - 9个
+            {
+                name: 'ipip.net',
+                flag: '🇨🇳',
+                country: 'CN',
+                url: 'https://myip.ipip.net/json',
+                parser: data => data.data?.ip || data.data?.IP
+            },
             {
                 name: 'ip.sb',
                 flag: '🇨🇳',
@@ -411,89 +438,75 @@
                 isText: true
             },
             {
-                name: 'cip.cc',
+                name: 'ipw.cn',
                 flag: '🇨🇳',
                 country: 'CN',
-                url: 'https://api.cip.cc/',
-                parser: data => data.trim(),
-                isText: true
+                url: 'https://ipw.cn/api/ip/myip',
+                parser: data => data.IP || data.ip
             },
             {
                 name: 'pconline',
                 flag: '🇨🇳',
                 country: 'CN',
-                url: 'https://whois.pconline.com.cn/ipJson.jsp',
+                url: 'https://whois.pconline.com.cn/ipJson.jsp?json=true',
                 parser: data => {
-                    const match = data.match(/"ip":"([^"]+)"/);
+                    if (typeof data === 'string') {
+                        try {
+                            const jsonData = JSON.parse(data);
+                            return jsonData.ip;
+                        } catch {
+                            const match = data.match(/"ip":"([^"]+)"/);
+                            return match ? match[1] : null;
+                        }
+                    }
+                    return data.ip;
+                },
+                isText: true
+            },
+            {
+                name: 'ipip.wlphp',
+                flag: '🇨🇳',
+                country: 'CN',
+                url: 'https://myip.ipip.net/',
+                parser: data => {
+                    const match = data.match(/当前 IP：([\d\.]+)/);
                     return match ? match[1] : null;
                 },
                 isText: true
             },
             {
-                name: 'ipip.net',
+                name: 'cip.cc',
                 flag: '🇨🇳',
                 country: 'CN',
-                url: 'https://myip.ipip.net/json',
-                parser: data => data.data.ip
-            },
-            {
-                name: 'chinaz',
-                flag: '🇨🇳',
-                country: 'CN',
-                url: 'https://ip.tool.chinaz.com/ajaxsync.aspx',
+                url: 'https://cip.cc/',
                 parser: data => {
-                    const match = data.match(/\d+\.\d+\.\d+\.\d+/);
-                    return match ? match[0] : null;
+                    const match = data.match(/IP[\s:：]+(\d+\.\d+\.\d+\.\d+)/);
+                    return match ? match[1] : null;
                 },
                 isText: true
             },
             {
-                name: 'ip138',
+                name: 'ip.3322.net',
                 flag: '🇨🇳',
                 country: 'CN',
-                url: 'https://api.ip138.com/ip/',
-                parser: data => data.data ? data.data[0] : null
+                url: 'http://ip.3322.net/',
+                parser: data => data.trim(),
+                isText: true
             },
             {
-                name: 'vore',
+                name: 'ip.cn',
                 flag: '🇨🇳',
                 country: 'CN',
-                url: 'https://api.vore.top/api/IPdata',
-                parser: data => data.ipinfo.text
+                url: 'https://ip.cn/api/index?ip=&type=0',
+                parser: data => data.ip
             },
             {
-                name: 'tencent',
+                name: 'ddnspod',
                 flag: '🇨🇳',
                 country: 'CN',
-                url: 'https://apis.map.qq.com/ws/location/v1/ip?output=jsonp',
-                parser: data => {
-                    const match = data.match(/"ip":"([^"]+)"/);
-                    return match ? match[1] : null;
-                },
-                isText: true,
-                needsProxy: true
-            },
-            {
-                name: 'ipw.cn',
-                flag: '🇨🇳',
-                country: 'CN',
-                url: 'https://ipw.cn/api/ip/myip',
-                parser: data => data.IP
-            },
-            // 更多国际源
-            {
-                name: 'bigdatacloud',
-                flag: '🌍',
-                country: 'US',
-                url: 'https://api.bigdatacloud.net/data/client-ip',
-                parser: data => data.ipString
-            },
-            {
-                name: 'ip.nf',
-                flag: '🌍',
-                country: 'US',
-                url: 'https://api.ip.nf/me.json',
-                parser: data => data.ip.ip
+                url: 'http://members.3322.org/dyndns/getip',
+                parser: data => data.trim(),
+                isText: true
             }
         ];
 
