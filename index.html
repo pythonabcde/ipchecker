@@ -327,6 +327,41 @@
                 url: 'https://ip.cip.cc',
                 parser: data => data.trim(),
                 isText: true
+            },
+            {
+                name: 'ip.cn',
+                flag: '🇨🇳',
+                country: 'CN',
+                url: 'https://ip.cn/api/index?ip=&type=0',
+                parser: data => data.ip
+            },
+            {
+                name: 'ipinfo.io',
+                flag: '🌍',
+                country: 'US',
+                url: 'https://ipinfo.io/json',
+                parser: data => data.ip
+            },
+            {
+                name: 'ip-api.com',
+                flag: '🌍',
+                country: 'US',
+                url: 'http://ip-api.com/json/?fields=query',
+                parser: data => data.query
+            },
+            {
+                name: 'r.inews.qq.com',
+                flag: '🇨🇳',
+                country: 'CN',
+                url: 'https://r.inews.qq.com/api/ip2city',
+                parser: data => data.ip
+            },
+            {
+                name: 'ip138.com',
+                flag: '🇨🇳',
+                country: 'CN',
+                url: 'https://api.ip138.com/query/',
+                parser: data => data.data?.[0]?.ip || data.ip
             }
         ];
 
