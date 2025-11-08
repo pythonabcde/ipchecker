@@ -540,17 +540,27 @@
                     row.className = 'success';
                     ipCell.innerHTML = `<div class="status-success">${ip}</div>`;
 
-                    // Use location from source if available, otherwise query
+                    // Check if we need to query geolocation API
                     locationCell.innerHTML = '<span class="status-loading">Loading...</span>';
 
-                    let finalLocationData;
-                    if (locationData && locationData.location) {
-                        // Use location data from the source
-                        finalLocationData = locationData;
-                    } else {
-                        // Query geolocation API
-                        finalLocationData = await getIPLocation(ip);
+                    // Determine which fields are missing from source
+                    const needsLocation = !locationData || !locationData.location;
+                    const needsISP = !locationData || !locationData.isp;
+                    const needsASN = !locationData || !locationData.asn;
+
+                    let apiLocationData = { location: '', isp: '', asn: '' };
+
+                    // Only query API if at least one field is missing
+                    if (needsLocation || needsISP || needsASN) {
+                        apiLocationData = await getIPLocation(ip);
                     }
+
+                    // Merge data: prioritize source data for each field individually
+                    const finalLocationData = {
+                        location: (locationData && locationData.location) || apiLocationData.location || '-',
+                        isp: (locationData && locationData.isp) || apiLocationData.isp || '',
+                        asn: (locationData && locationData.asn) || apiLocationData.asn || ''
+                    };
 
                     // Format and display location info
                     let locationHTML = '';
