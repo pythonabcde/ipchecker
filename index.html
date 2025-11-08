@@ -97,12 +97,12 @@
             border-radius: 2px;
             vertical-align: middle;
             box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            display: inline-block;
         }
 
-        .country-flag-emoji {
-            font-size: 1.3rem;
-            margin-right: 8px;
+        .dns-server-info .country-flag {
             vertical-align: middle;
+            margin-right: 6px;
         }
 
         .table-container {
@@ -907,14 +907,11 @@
             }
         }
 
-        // Convert country code to flag emoji
+        // Convert country code to flag image
         function countryCodeToFlag(countryCode) {
             if (!countryCode || countryCode.length !== 2) return '';
-            const codePoints = countryCode
-                .toUpperCase()
-                .split('')
-                .map(char => 127397 + char.charCodeAt(0));
-            return String.fromCodePoint(...codePoints);
+            const code = countryCode.toLowerCase();
+            return `<img src="https://flagcdn.com/w20/${code}.png" class="country-flag" alt="${countryCode.toUpperCase()}" onerror="this.style.display='none'" />`;
         }
 
         // Update IP summary card with detailed information
@@ -1064,10 +1061,10 @@
                         updateField('summaryISP', parsed.isp);
                         updateField('summaryASN', parsed.asn);
 
-                        // Display country with flag emoji
+                        // Display country with flag image
                         if (parsed.countryCode) {
-                            const flagEmoji = countryCodeToFlag(parsed.countryCode);
-                            const countryDisplay = `<span class="country-flag-emoji">${flagEmoji}</span>${parsed.country || parsed.countryName}`;
+                            const flagImg = countryCodeToFlag(parsed.countryCode);
+                            const countryDisplay = `${flagImg}${parsed.country || parsed.countryName}`;
                             updateFieldHTML('summaryCountry', countryDisplay);
                         } else {
                             updateField('summaryCountry', parsed.country);
@@ -1687,17 +1684,17 @@
                         const serverItem = document.createElement('div');
                         serverItem.className = 'dns-server-item';
 
-                        // Build location display with flag emoji
+                        // Build location display with flag image
                         let locationDisplay = '';
                         if (server.country_code) {
-                            const flagEmoji = countryCodeToFlag(server.country_code);
+                            const flagImg = countryCodeToFlag(server.country_code);
                             if (server.country_name) {
-                                locationDisplay = `<span class="country-flag-emoji">${flagEmoji}</span>${server.country_name}`;
+                                locationDisplay = `${flagImg}${server.country_name}`;
                                 if (server.city) {
                                     locationDisplay += ` ${server.city}`;
                                 }
                             } else {
-                                locationDisplay = `<span class="country-flag-emoji">${flagEmoji}</span>${server.geo}`;
+                                locationDisplay = `${flagImg}${server.geo}`;
                             }
                         } else {
                             locationDisplay = server.geo;
