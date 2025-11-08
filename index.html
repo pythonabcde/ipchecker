@@ -982,48 +982,101 @@
             const serversDiv = document.getElementById('dnsServers');
 
             try {
-                // Use multiple DNS leak detection services
-                const dnsServices = [
-                    'https://edns.ip-api.com/json',
-                    'https://dns.google/resolve?name=whoami.akamai.net&type=A'
-                ];
+                let allDnsServers = [];
 
-                let dnsServers = [];
-
-                // Try edns.ip-api.com first
+                // Method 1: Use edns.ip-api.com
                 try {
-                    const response = await fetch('https://edns.ip-api.com/json');
-                    const data = await response.json();
+                    const response1 = await fetch('https://edns.ip-api.com/json');
+                    const data1 = await response1.json();
 
-                    if (data.dns) {
-                        const server = {
-                            ip: data.dns.ip,
-                            geo: data.dns.geo || 'Unknown',
-                            isp: data.dns.isp || 'Unknown'
-                        };
-                        dnsServers.push(server);
+                    if (data1.dns && data1.dns.ip) {
+                        allDnsServers.push({
+                            ip: data1.dns.ip,
+                            geo: data1.dns.geo || 'Unknown',
+                            isp: data1.dns.isp || 'Unknown'
+                        });
                     }
                 } catch (e) {
-                    console.log('DNS detection service 1 failed');
+                    console.log('edns.ip-api.com failed');
+                }
+
+                // Method 2: Trigger DNS queries and use bash.ws
+                try {
+                    // Create unique subdomain to trigger DNS lookup
+                    const uniqueId = Math.random().toString(36).substring(7);
+                    const testDomain = `test-${uniqueId}.bash.ws`;
+
+                    // Trigger DNS lookup by trying to fetch from unique subdomain
+                    await fetch(`https://${testDomain}`, {
+                        mode: 'no-cors',
+                        cache: 'no-cache'
+                    }).catch(() => {});
+
+                    // Wait a bit for DNS servers to register
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+
+                    // Try to get DNS info from bash.ws
+                    const response2 = await fetch('https://bash.ws/dnsleak/test');
+                    const data2 = await response2.json();
+
+                    if (data2 && Array.isArray(data2)) {
+                        data2.forEach(server => {
+                            // Check if this IP is not already in our list
+                            if (!allDnsServers.find(s => s.ip === server.ip)) {
+                                allDnsServers.push({
+                                    ip: server.ip,
+                                    geo: `${server.country_name || ''} ${server.city || ''}`.trim() || 'Unknown',
+                                    isp: server.asn || 'Unknown'
+                                });
+                            }
+                        });
+                    }
+                } catch (e) {
+                    console.log('bash.ws failed');
+                }
+
+                // Method 3: Use whoer.net API
+                try {
+                    const response3 = await fetch('https://whoer.net/ajax/getDnsServer');
+                    const data3 = await response3.json();
+
+                    if (data3 && data3.dns) {
+                        // Parse DNS info from whoer.net
+                        const dnsInfo = data3.dns;
+                        if (dnsInfo.ip && !allDnsServers.find(s => s.ip === dnsInfo.ip)) {
+                            allDnsServers.push({
+                                ip: dnsInfo.ip,
+                                geo: dnsInfo.country || 'Unknown',
+                                isp: dnsInfo.provider || 'Unknown'
+                            });
+                        }
+                    }
+                } catch (e) {
+                    console.log('whoer.net failed');
                 }
 
                 // Display results
-                if (dnsServers.length > 0) {
+                if (allDnsServers.length > 0) {
+                    // Remove duplicates based on IP
+                    const uniqueServers = allDnsServers.filter((server, index, self) =>
+                        index === self.findIndex(s => s.ip === server.ip)
+                    );
+
                     statusDiv.className = 'dns-status safe';
                     statusDiv.innerHTML = `
                         <div class="dns-status-icon">✅</div>
                         <div class="dns-status-text">
-                            <div class="dns-status-title">DNS Detected</div>
-                            <div class="dns-status-desc">Found ${dnsServers.length} DNS server(s)</div>
+                            <div class="dns-status-title">DNS Servers Detected</div>
+                            <div class="dns-status-desc">Found ${uniqueServers.length} DNS server(s)</div>
                         </div>
                     `;
 
-                    dnsServers.forEach(server => {
+                    uniqueServers.forEach((server, index) => {
                         const serverItem = document.createElement('div');
                         serverItem.className = 'dns-server-item';
                         serverItem.innerHTML = `
-                            <div class="dns-server-ip">${server.ip}</div>
-                            <div class="dns-server-info">Location: ${server.geo} | ISP: ${server.isp}</div>
+                            <div class="dns-server-ip">DNS ${index + 1}: ${server.ip}</div>
+                            <div class="dns-server-info">Location: ${server.geo} | Provider: ${server.isp}</div>
                         `;
                         serversDiv.appendChild(serverItem);
                     });
