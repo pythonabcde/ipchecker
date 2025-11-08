@@ -25,6 +25,71 @@
             margin: 0 auto;
         }
 
+        .ip-summary-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .ip-summary-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .ip-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .ip-summary-item {
+            display: flex;
+            align-items: baseline;
+            padding: 10px 0;
+        }
+
+        .ip-summary-label {
+            font-weight: 600;
+            color: #4a5568;
+            min-width: 140px;
+            margin-right: 10px;
+        }
+
+        .ip-summary-value {
+            color: #2d3748;
+            font-weight: 500;
+            word-break: break-word;
+        }
+
+        .ip-summary-value.loading {
+            color: #4299e1;
+        }
+
+        .ip-summary-value.primary {
+            font-size: 1.3rem;
+            font-family: 'Courier New', monospace;
+            color: #667eea;
+            font-weight: 700;
+        }
+
+        .ip-summary-map-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .ip-summary-map-link:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
         .table-container {
             background: white;
             border-radius: 12px;
@@ -429,6 +494,54 @@
 </head>
 <body>
     <div class="container">
+        <div class="ip-summary-card">
+            <div class="ip-summary-title">Your IP Information</div>
+            <div class="ip-summary-grid" id="ipSummaryGrid">
+                <div class="ip-summary-item">
+                    <div class="ip-summary-label">IP:</div>
+                    <div class="ip-summary-value primary loading" id="summaryIP">Detecting...</div>
+                </div>
+                <div class="ip-summary-item">
+                    <div class="ip-summary-label">ISP:</div>
+                    <div class="ip-summary-value loading" id="summaryISP">Loading...</div>
+                </div>
+                <div class="ip-summary-item">
+                    <div class="ip-summary-label">ASN:</div>
+                    <div class="ip-summary-value loading" id="summaryASN">Loading...</div>
+                </div>
+                <div class="ip-summary-item">
+                    <div class="ip-summary-label">Country:</div>
+                    <div class="ip-summary-value loading" id="summaryCountry">Loading...</div>
+                </div>
+                <div class="ip-summary-item">
+                    <div class="ip-summary-label">Region:</div>
+                    <div class="ip-summary-value loading" id="summaryRegion">Loading...</div>
+                </div>
+                <div class="ip-summary-item">
+                    <div class="ip-summary-label">City:</div>
+                    <div class="ip-summary-value loading" id="summaryCity">Loading...</div>
+                </div>
+                <div class="ip-summary-item">
+                    <div class="ip-summary-label">Time Zone:</div>
+                    <div class="ip-summary-value loading" id="summaryTimezone">Loading...</div>
+                </div>
+                <div class="ip-summary-item">
+                    <div class="ip-summary-label">Latitude & Longitude:</div>
+                    <div class="ip-summary-value loading" id="summaryLatLon">Loading...</div>
+                </div>
+                <div class="ip-summary-item">
+                    <div class="ip-summary-label">Google Map:</div>
+                    <div class="ip-summary-value" id="summaryMap">
+                        <a href="#" class="ip-summary-map-link" id="mapLink" target="_blank">Activate</a>
+                    </div>
+                </div>
+                <div class="ip-summary-item">
+                    <div class="ip-summary-label">Last Update:</div>
+                    <div class="ip-summary-value" id="summaryUpdate">-</div>
+                </div>
+            </div>
+        </div>
+
         <div class="table-container">
             <table id="checksTable">
                 <thead>
@@ -773,7 +886,110 @@
                 mostCommonIP = Object.keys(detectedIPs).reduce((a, b) =>
                     detectedIPs[a] > detectedIPs[b] ? a : b
                 );
+
+                // Update IP summary card
+                updateIPSummary(mostCommonIP);
             }
+        }
+
+        // Update IP summary card with detailed information
+        async function updateIPSummary(ip) {
+            if (!ip) return;
+
+            // Update IP immediately
+            const summaryIPEl = document.getElementById('summaryIP');
+            summaryIPEl.textContent = ip;
+            summaryIPEl.classList.remove('loading');
+
+            // Update last update time
+            const now = new Date();
+            document.getElementById('summaryUpdate').textContent = now.toUTCString();
+
+            try {
+                // Try to get detailed IP information from ipapi.co (most comprehensive)
+                const response = await fetch(`https://ipapi.co/${ip}/json/`);
+                if (response.ok) {
+                    const data = await response.json();
+
+                    // Update all fields
+                    const updateField = (id, value, defaultValue = '-') => {
+                        const el = document.getElementById(id);
+                        if (el) {
+                            el.textContent = value || defaultValue;
+                            el.classList.remove('loading');
+                        }
+                    };
+
+                    updateField('summaryISP', data.org || data.isp);
+                    updateField('summaryASN', data.asn);
+                    updateField('summaryCountry', data.country_name ? `${data.country_name} (${data.country})` : data.country);
+                    updateField('summaryRegion', data.region ? `${data.region} (${data.region_code})` : data.region_code);
+                    updateField('summaryCity', data.city);
+                    updateField('summaryTimezone', data.timezone);
+
+                    if (data.latitude && data.longitude) {
+                        updateField('summaryLatLon', `${data.latitude}, ${data.longitude}`);
+
+                        // Update Google Maps link
+                        const mapLink = document.getElementById('mapLink');
+                        if (mapLink) {
+                            mapLink.href = `https://www.google.com/maps/search/?api=1&query=${data.latitude},${data.longitude}`;
+                        }
+                    }
+
+                    return;
+                }
+            } catch (error) {
+                console.log('ipapi.co failed, trying ipwhois.app');
+            }
+
+            // Fallback to ipwhois.app
+            try {
+                const response = await fetch(`https://ipwho.is/${ip}`);
+                if (response.ok) {
+                    const data = await response.json();
+
+                    if (data.success !== false) {
+                        const updateField = (id, value, defaultValue = '-') => {
+                            const el = document.getElementById(id);
+                            if (el) {
+                                el.textContent = value || defaultValue;
+                                el.classList.remove('loading');
+                            }
+                        };
+
+                        updateField('summaryISP', data.connection?.isp || data.connection?.org);
+                        updateField('summaryASN', data.connection?.asn ? `AS${data.connection.asn}` : '');
+                        updateField('summaryCountry', data.country ? `${data.country} (${data.country_code})` : '');
+                        updateField('summaryRegion', data.region ? `${data.region} (${data.region_code || ''})`.trim() : '');
+                        updateField('summaryCity', data.city);
+                        updateField('summaryTimezone', data.timezone?.id);
+
+                        if (data.latitude && data.longitude) {
+                            updateField('summaryLatLon', `${data.latitude}, ${data.longitude}`);
+
+                            // Update Google Maps link
+                            const mapLink = document.getElementById('mapLink');
+                            if (mapLink) {
+                                mapLink.href = `https://www.google.com/maps/search/?api=1&query=${data.latitude},${data.longitude}`;
+                            }
+                        }
+
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.log('ipwho.is failed');
+            }
+
+            // If all APIs fail, remove loading states
+            ['summaryISP', 'summaryASN', 'summaryCountry', 'summaryRegion', 'summaryCity', 'summaryTimezone', 'summaryLatLon'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el && el.classList.contains('loading')) {
+                    el.textContent = '-';
+                    el.classList.remove('loading');
+                }
+            });
         }
 
         // Execute IP check
@@ -1068,104 +1284,171 @@
             try {
                 let allDnsServers = [];
 
-                // Generate unique session ID
-                const sessionId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+                // Method 1: Use multiple DNS leak detection services in parallel
+                const dnsDetectionPromises = [];
 
-                // Method 1: Aggressive DNS query triggering using multiple techniques
-                // Create 20 unique random subdomains to force DNS queries
-                const randomDomains = [];
-                for (let i = 0; i < 20; i++) {
-                    const randomStr = Math.random().toString(36).substring(2, 15);
-                    randomDomains.push(`${randomStr}-${i}-${sessionId}.bash.ws`);
-                }
-
-                // Trigger DNS lookups using multiple methods
-                const dnsPromises = [];
-
-                // Method A: Image requests
-                randomDomains.forEach(domain => {
-                    dnsPromises.push(new Promise((resolve) => {
-                        const img = new Image();
-                        img.onload = () => resolve();
-                        img.onerror = () => resolve();
-                        img.src = `https://${domain}/pixel.gif?t=${Date.now()}&r=${Math.random()}`;
-                        setTimeout(resolve, 2000);
-                    }));
-                });
-
-                // Method B: Script tag requests (triggers DNS differently)
-                randomDomains.slice(0, 5).forEach(domain => {
-                    dnsPromises.push(new Promise((resolve) => {
-                        const script = document.createElement('script');
-                        script.onload = () => resolve();
-                        script.onerror = () => resolve();
-                        script.src = `https://${domain}/js.js?t=${Date.now()}`;
-                        document.head.appendChild(script);
-                        setTimeout(() => {
-                            script.remove();
-                            resolve();
-                        }, 2000);
-                    }));
-                });
-
-                // Method C: Fetch requests to trigger DNS
-                randomDomains.slice(0, 10).forEach(domain => {
-                    dnsPromises.push(
-                        fetch(`https://${domain}/test`, {
-                            mode: 'no-cors',
-                            cache: 'no-cache'
-                        }).catch(() => {})
-                    );
-                });
-
-                // Wait for all DNS lookup attempts
-                await Promise.all(dnsPromises);
-
-                // Wait additional time for DNS servers to fully register
-                await new Promise(resolve => setTimeout(resolve, 5000));
-
-                // Query bash.ws API multiple times to ensure we get all DNS servers
-                for (let attempt = 0; attempt < 3; attempt++) {
+                // Service 1: bash.ws (most comprehensive)
+                dnsDetectionPromises.push((async () => {
                     try {
-                        const response = await fetch(`https://bash.ws/dnsleak/test/${sessionId}?t=${Date.now()}`);
-                        const data = await response.json();
+                        const sessionId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 
-                        if (data && Array.isArray(data)) {
-                            data.forEach(server => {
-                                if (!allDnsServers.find(s => s.ip === server.ip)) {
-                                    allDnsServers.push({
-                                        ip: server.ip,
-                                        geo: `${server.country_name || ''} ${server.city || ''}`.trim() || 'Unknown',
-                                        isp: server.asn || server.isp || 'Unknown'
+                        // Create 30 unique random subdomains to force DNS queries
+                        const randomDomains = [];
+                        for (let i = 0; i < 30; i++) {
+                            const randomStr = Math.random().toString(36).substring(2, 15);
+                            randomDomains.push(`${randomStr}-${i}-${sessionId}.bash.ws`);
+                        }
+
+                        // Trigger DNS lookups using multiple methods in parallel
+                        const lookupPromises = [];
+
+                        // Images
+                        randomDomains.forEach(domain => {
+                            lookupPromises.push(new Promise((resolve) => {
+                                const img = new Image();
+                                img.onload = () => resolve();
+                                img.onerror = () => resolve();
+                                img.src = `https://${domain}/pixel.gif?t=${Date.now()}&r=${Math.random()}`;
+                                setTimeout(resolve, 3000);
+                            }));
+                        });
+
+                        // iframes (triggers different DNS behavior)
+                        randomDomains.slice(0, 10).forEach(domain => {
+                            lookupPromises.push(new Promise((resolve) => {
+                                const iframe = document.createElement('iframe');
+                                iframe.style.display = 'none';
+                                iframe.src = `https://${domain}/test.html`;
+                                document.body.appendChild(iframe);
+                                setTimeout(() => {
+                                    iframe.remove();
+                                    resolve();
+                                }, 3000);
+                            }));
+                        });
+
+                        // Link prefetch (another DNS trigger)
+                        randomDomains.slice(0, 10).forEach(domain => {
+                            lookupPromises.push(new Promise((resolve) => {
+                                const link = document.createElement('link');
+                                link.rel = 'dns-prefetch';
+                                link.href = `https://${domain}`;
+                                document.head.appendChild(link);
+                                setTimeout(() => {
+                                    link.remove();
+                                    resolve();
+                                }, 2000);
+                            }));
+                        });
+
+                        await Promise.all(lookupPromises);
+                        await new Promise(resolve => setTimeout(resolve, 6000));
+
+                        // Query API multiple times
+                        const bashServers = [];
+                        for (let attempt = 0; attempt < 5; attempt++) {
+                            try {
+                                const response = await fetch(`https://bash.ws/dnsleak/test/${sessionId}?t=${Date.now()}`);
+                                const data = await response.json();
+
+                                if (data && Array.isArray(data)) {
+                                    data.forEach(server => {
+                                        if (!bashServers.find(s => s.ip === server.ip)) {
+                                            bashServers.push({
+                                                ip: server.ip,
+                                                geo: `${server.country_name || ''} ${server.city || ''}`.trim() || 'Unknown',
+                                                isp: server.asn || server.isp || 'Unknown'
+                                            });
+                                        }
                                     });
                                 }
-                            });
+                            } catch (e) {
+                                console.log(`bash.ws attempt ${attempt + 1} failed:`, e);
+                            }
+
+                            if (attempt < 4) await new Promise(resolve => setTimeout(resolve, 2000));
                         }
+
+                        return bashServers;
                     } catch (e) {
-                        console.log(`bash.ws API attempt ${attempt + 1} failed:`, e);
+                        console.log('bash.ws failed:', e);
+                        return [];
                     }
+                })());
 
-                    // Wait between attempts
-                    if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 2000));
-                }
+                // Service 2: dnsleaktest.org
+                dnsDetectionPromises.push((async () => {
+                    try {
+                        const servers = [];
+                        const testId = Math.random().toString(36).substring(2, 15);
 
-                // Method 2: Try alternative DNS detection services
-                try {
-                    const response1 = await fetch('https://edns.ip-api.com/json');
-                    const data1 = await response1.json();
-
-                    if (data1.dns && data1.dns.ip) {
-                        if (!allDnsServers.find(s => s.ip === data1.dns.ip)) {
-                            allDnsServers.push({
-                                ip: data1.dns.ip,
-                                geo: data1.dns.geo || 'Unknown',
-                                isp: data1.dns.isp || 'Unknown'
-                            });
+                        // Trigger DNS queries
+                        for (let i = 0; i < 15; i++) {
+                            const subdomain = `${Math.random().toString(36).substring(2, 15)}.${testId}`;
+                            fetch(`https://${subdomain}.dnsleaktest.org/`, { mode: 'no-cors' }).catch(() => {});
                         }
+
+                        await new Promise(resolve => setTimeout(resolve, 4000));
+
+                        // Note: dnsleaktest.org doesn't have a public API, so this is best effort
+                        return servers;
+                    } catch (e) {
+                        console.log('dnsleaktest.org failed:', e);
+                        return [];
                     }
-                } catch (e) {
-                    console.log('edns.ip-api.com failed');
-                }
+                })());
+
+                // Service 3: edns.ip-api.com
+                dnsDetectionPromises.push((async () => {
+                    try {
+                        const response = await fetch('https://edns.ip-api.com/json');
+                        const data = await response.json();
+
+                        if (data.dns && data.dns.ip) {
+                            return [{
+                                ip: data.dns.ip,
+                                geo: data.dns.geo || 'Unknown',
+                                isp: data.dns.isp || 'Unknown'
+                            }];
+                        }
+                        return [];
+                    } catch (e) {
+                        console.log('edns.ip-api.com failed:', e);
+                        return [];
+                    }
+                })());
+
+                // Service 4: whoer.net DNS detection
+                dnsDetectionPromises.push((async () => {
+                    try {
+                        const servers = [];
+                        const testId = Math.random().toString(36).substring(2, 15);
+
+                        // Trigger DNS queries to whoer.net subdomains
+                        for (let i = 0; i < 10; i++) {
+                            const subdomain = `${Math.random().toString(36).substring(2, 10)}-${testId}`;
+                            fetch(`https://${subdomain}.whoer.net/test`, { mode: 'no-cors' }).catch(() => {});
+                        }
+
+                        await new Promise(resolve => setTimeout(resolve, 3000));
+                        return servers;
+                    } catch (e) {
+                        console.log('whoer.net failed:', e);
+                        return [];
+                    }
+                })());
+
+                // Wait for all detection methods to complete
+                const results = await Promise.all(dnsDetectionPromises);
+
+                // Merge all results
+                results.forEach(servers => {
+                    servers.forEach(server => {
+                        if (!allDnsServers.find(s => s.ip === server.ip)) {
+                            allDnsServers.push(server);
+                        }
+                    });
+                });
 
                 // Display results
                 if (allDnsServers.length > 0) {
