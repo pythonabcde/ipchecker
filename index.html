@@ -100,8 +100,8 @@
         }
 
         .country-flag {
-            width: 24px;
-            height: 18px;
+            width: 28px;
+            height: 21px;
             margin-right: 8px;
             border-radius: 2px;
             vertical-align: middle;
@@ -109,7 +109,20 @@
             display: inline-block;
         }
 
+        .country-flag-emoji {
+            font-size: 1.4rem;
+            margin-right: 8px;
+            vertical-align: middle;
+            display: inline-block;
+            line-height: 1;
+        }
+
         .dns-server-info .country-flag {
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+
+        .dns-server-info .country-flag-emoji {
             vertical-align: middle;
             margin-right: 6px;
         }
@@ -916,11 +929,32 @@
             }
         }
 
-        // Convert country code to flag image
+        // Detect if user is on iOS/iPhone
+        function isIOS() {
+            return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        }
+
+        // Convert country code to flag (emoji for iOS, image for others)
         function countryCodeToFlag(countryCode) {
             if (!countryCode || countryCode.length !== 2) return '';
+
+            // For iOS devices, use emoji flags (best quality on iPhone)
+            if (isIOS()) {
+                const codePoints = countryCode
+                    .toUpperCase()
+                    .split('')
+                    .map(char => 127397 + char.charCodeAt(0));
+                const emoji = String.fromCodePoint(...codePoints);
+                return `<span class="country-flag-emoji">${emoji}</span>`;
+            }
+
+            // For desktop and other devices, use higher resolution image flags
             const code = countryCode.toLowerCase();
-            return `<img src="https://flagcdn.com/w20/${code}.png" class="country-flag" alt="${countryCode.toUpperCase()}" onerror="this.style.display='none'" />`;
+            return `<img src="https://flagcdn.com/w40/${code}.png"
+                         srcset="https://flagcdn.com/w40/${code}.png 1x, https://flagcdn.com/w80/${code}.png 2x"
+                         class="country-flag"
+                         alt="${countryCode.toUpperCase()}"
+                         onerror="this.style.display='none'" />`;
         }
 
         // Update IP summary card with detailed information
