@@ -194,11 +194,47 @@
             font-weight: 700;
             color: #667eea;
             margin-top: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .connectivity-latency.failed {
             color: #f56565;
             font-size: 1rem;
+        }
+
+        .latency-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 5px rgba(0,0,0,0.2);
+        }
+
+        .latency-indicator.excellent {
+            background-color: #48bb78;
+            box-shadow: 0 0 8px #48bb78;
+        }
+
+        .latency-indicator.good {
+            background-color: #4299e1;
+            box-shadow: 0 0 8px #4299e1;
+        }
+
+        .latency-indicator.fair {
+            background-color: #ed8936;
+            box-shadow: 0 0 8px #ed8936;
+        }
+
+        .latency-indicator.poor {
+            background-color: #f56565;
+            box-shadow: 0 0 8px #f56565;
+        }
+
+        .latency-indicator.failed {
+            background-color: #1a202c;
+            box-shadow: none;
         }
 
         .spinner {
@@ -695,6 +731,12 @@
                 icon: 'https://www.bilibili.com/favicon.ico'
             },
             {
+                name: 'ip.39203.com',
+                url: 'https://ip.39203.com/favicon.ico',
+                type: 'domestic',
+                icon: 'https://ip.39203.com/favicon.ico'
+            },
+            {
                 name: 'jsDelivr',
                 url: 'https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js',
                 type: 'international',
@@ -717,6 +759,24 @@
                 url: 'https://github.com/favicon.ico',
                 type: 'international',
                 icon: 'https://github.githubassets.com/favicons/favicon.svg'
+            },
+            {
+                name: 'Docker',
+                url: 'https://www.docker.com/favicon.ico',
+                type: 'international',
+                icon: 'https://www.docker.com/wp-content/uploads/2023/04/cropped-Docker-favicon-32x32.png'
+            },
+            {
+                name: 'ChatGPT',
+                url: 'https://chatgpt.com/favicon.ico',
+                type: 'international',
+                icon: 'https://cdn.oaistatic.com/assets/favicon-o20kmmos.svg'
+            },
+            {
+                name: 'Claude.ai',
+                url: 'https://claude.ai/favicon.ico',
+                type: 'international',
+                icon: 'https://claude.ai/favicon.ico'
             }
         ];
 
@@ -757,7 +817,7 @@
         function createConnectivityItem(test) {
             const item = document.createElement('div');
             item.className = 'connectivity-item testing';
-            item.id = `connectivity-${test.name.toLowerCase().replace(/\s+/g, '-')}`;
+            item.id = `connectivity-${test.name.toLowerCase().replace(/\s+/g, '-').replace(/\./g, '-')}`;
 
             const badgeClass = test.type === 'domestic' ? 'domestic' : 'international';
             const badgeText = test.type === 'domestic' ? 'Domestic' : 'International';
@@ -788,18 +848,37 @@
             // Run tests
             for (const test of connectivityTests) {
                 const result = await testConnectivity(test);
-                const item = document.getElementById(`connectivity-${test.name.toLowerCase().replace(/\s+/g, '-')}`);
+                const item = document.getElementById(`connectivity-${test.name.toLowerCase().replace(/\s+/g, '-').replace(/\./g, '-')}`);
                 const latencyDiv = item.querySelector('.connectivity-latency');
 
                 if (result.success) {
                     item.classList.remove('testing');
                     item.classList.add('success');
-                    latencyDiv.textContent = `${result.latency}ms`;
+
+                    // Determine indicator color based on latency
+                    let indicatorClass = 'failed';
+                    if (result.latency < 100) {
+                        indicatorClass = 'excellent'; // Green
+                    } else if (result.latency < 200) {
+                        indicatorClass = 'good'; // Blue
+                    } else if (result.latency < 400) {
+                        indicatorClass = 'fair'; // Orange
+                    } else {
+                        indicatorClass = 'poor'; // Red
+                    }
+
+                    latencyDiv.innerHTML = `
+                        <span>${result.latency}ms</span>
+                        <span class="latency-indicator ${indicatorClass}"></span>
+                    `;
                 } else {
                     item.classList.remove('testing');
                     item.classList.add('failed');
                     latencyDiv.classList.add('failed');
-                    latencyDiv.textContent = 'Failed';
+                    latencyDiv.innerHTML = `
+                        <span>Failed</span>
+                        <span class="latency-indicator failed"></span>
+                    `;
                 }
             }
         }
