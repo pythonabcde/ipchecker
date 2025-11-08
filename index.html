@@ -159,6 +159,15 @@
             font-weight: 600;
             font-size: 1rem;
             margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+
+        .connectivity-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            border-radius: 3px;
         }
 
         .connectivity-badge {
@@ -347,10 +356,10 @@
                 isText: true
             },
             {
-                name: 'ipify64',
+                name: 'ipinfo.io',
                 flag: '🌍',
                 country: 'US',
-                url: 'https://api64.ipify.org?format=json',
+                url: 'https://ipinfo.io/json',
                 parser: data => data.ip
             },
             {
@@ -405,11 +414,11 @@
                 parser: data => data.ip
             },
             {
-                name: 'ddnspod',
-                flag: '🇨🇳',
-                country: 'CN',
-                url: 'https://www.ddnspod.com/api/myip',
-                parser: data => data.ip
+                name: 'vore.top',
+                flag: '🌍',
+                country: 'US',
+                url: 'https://api.vore.top/api/IPdata',
+                parser: data => data.ipinfo?.ip || data.ip
             },
             {
                 name: 'cz88.net',
@@ -683,32 +692,38 @@
             {
                 name: 'ByteDance',
                 url: 'https://www.bytedance.com/favicon.ico',
-                type: 'domestic'
+                type: 'domestic',
+                icon: 'https://www.bytedance.com/favicon.ico'
             },
             {
                 name: 'Bilibili',
                 url: 'https://www.bilibili.com/favicon.ico',
-                type: 'domestic'
+                type: 'domestic',
+                icon: 'https://www.bilibili.com/favicon.ico'
             },
             {
                 name: 'jsDelivr',
                 url: 'https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js',
-                type: 'international'
+                type: 'international',
+                icon: 'https://www.jsdelivr.com/favicon.ico'
             },
             {
                 name: 'YouTube',
                 url: 'https://www.youtube.com/favicon.ico',
-                type: 'international'
+                type: 'international',
+                icon: 'https://www.youtube.com/s/desktop/6e78f535/img/favicon_32x32.png'
             },
             {
                 name: 'Google',
                 url: 'https://www.google.com/favicon.ico',
-                type: 'international'
+                type: 'international',
+                icon: 'https://www.google.com/favicon.ico'
             },
             {
                 name: 'GitHub',
                 url: 'https://github.com/favicon.ico',
-                type: 'international'
+                type: 'international',
+                icon: 'https://github.githubassets.com/favicons/favicon.svg'
             }
         ];
 
@@ -756,7 +771,8 @@
 
             item.innerHTML = `
                 <div class="connectivity-name">
-                    ${test.name}
+                    <img src="${test.icon}" class="connectivity-icon" alt="${test.name}" onerror="this.style.display='none'">
+                    <span>${test.name}</span>
                     <span class="connectivity-badge ${badgeClass}">${badgeText}</span>
                 </div>
                 <div class="connectivity-latency">
