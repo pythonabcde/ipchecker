@@ -1387,6 +1387,100 @@
             }
         }
 
+        // Get DNS server geolocation information
+        async function getDNSServerGeoLocation(ip) {
+            // Try multiple geolocation APIs for DNS server IPs
+            const geoApis = [
+                {
+                    name: 'ipwho.is',
+                    url: `https://ipwho.is/${ip}`,
+                    parse: (data) => {
+                        if (data.success !== false && data.country_code) {
+                            return {
+                                country_code: data.country_code,
+                                country_name: data.country,
+                                city: data.city,
+                                isp: data.connection?.isp || data.connection?.org || ''
+                            };
+                        }
+                        return null;
+                    }
+                },
+                {
+                    name: 'ipapi.co',
+                    url: `https://ipapi.co/${ip}/json/`,
+                    parse: (data) => {
+                        if (data && !data.error && data.country_code) {
+                            return {
+                                country_code: data.country,
+                                country_name: data.country_name,
+                                city: data.city,
+                                isp: data.org || data.isp || ''
+                            };
+                        }
+                        return null;
+                    }
+                },
+                {
+                    name: 'ip-api.com',
+                    url: `http://ip-api.com/json/${ip}?fields=status,country,countryCode,city,isp,org`,
+                    parse: (data) => {
+                        if (data && data.status === 'success' && data.countryCode) {
+                            return {
+                                country_code: data.countryCode,
+                                country_name: data.country,
+                                city: data.city,
+                                isp: data.isp || data.org || ''
+                            };
+                        }
+                        return null;
+                    }
+                },
+                {
+                    name: 'ip.sb',
+                    url: `https://api.ip.sb/geoip/${ip}`,
+                    parse: (data) => {
+                        if (data && data.country_code) {
+                            return {
+                                country_code: data.country_code,
+                                country_name: data.country,
+                                city: data.city,
+                                isp: data.isp || data.organization || ''
+                            };
+                        }
+                        return null;
+                    }
+                }
+            ];
+
+            // Try each API until we get valid data
+            for (const api of geoApis) {
+                try {
+                    const controller = new AbortController();
+                    const timeout = setTimeout(() => controller.abort(), 5000);
+
+                    const response = await fetch(api.url, {
+                        signal: controller.signal
+                    });
+                    clearTimeout(timeout);
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        const result = api.parse(data);
+                        if (result) {
+                            console.log(`Got DNS geo info from ${api.name} for ${ip}`);
+                            return result;
+                        }
+                    }
+                } catch (error) {
+                    console.log(`${api.name} failed for DNS ${ip}:`, error);
+                    continue;
+                }
+            }
+
+            return null;
+        }
+
         // WebRTC-based DNS detection (similar to ipleak.net method)
         async function detectDNSviaWebRTC() {
             return new Promise((resolve) => {
@@ -1676,6 +1770,35 @@
                         <div class="dns-status-icon">✅</div>
                         <div class="dns-status-text">
                             <div class="dns-status-title">DNS Servers Detected</div>
+                            <div class="dns-status-desc">Found ${uniqueServers.length} DNS server(s), querying location...</div>
+                        </div>
+                    `;
+
+                    // Query location for each DNS server that doesn't have country info
+                    for (let i = 0; i < uniqueServers.length; i++) {
+                        const server = uniqueServers[i];
+
+                        // If server doesn't have country info, query API
+                        if (!server.country_code || !server.country_name) {
+                            try {
+                                const geoData = await getDNSServerGeoLocation(server.ip);
+                                if (geoData) {
+                                    server.country_code = geoData.country_code;
+                                    server.country_name = geoData.country_name;
+                                    server.city = geoData.city;
+                                    server.isp = geoData.isp || server.isp;
+                                }
+                            } catch (e) {
+                                console.log(`Failed to get location for DNS ${server.ip}:`, e);
+                            }
+                        }
+                    }
+
+                    // Update status after location queries
+                    statusDiv.innerHTML = `
+                        <div class="dns-status-icon">✅</div>
+                        <div class="dns-status-text">
+                            <div class="dns-status-title">DNS Servers Detected</div>
                             <div class="dns-status-desc">Found ${uniqueServers.length} DNS server(s)</div>
                         </div>
                     `;
@@ -1697,12 +1820,12 @@
                                 locationDisplay = `${flagImg}${server.geo}`;
                             }
                         } else {
-                            locationDisplay = server.geo;
+                            locationDisplay = server.geo || 'Unknown';
                         }
 
                         serverItem.innerHTML = `
                             <div class="dns-server-ip">DNS ${index + 1}: ${server.ip}</div>
-                            <div class="dns-server-info">Location: ${locationDisplay} | Provider: ${server.isp}</div>
+                            <div class="dns-server-info">Location: ${locationDisplay} | Provider: ${server.isp || 'Unknown'}</div>
                         `;
                         serversDiv.appendChild(serverItem);
                     });
