@@ -321,47 +321,39 @@
                 parser: data => data.ip
             },
             {
-                name: 'cip.cc',
+                name: 'pconline',
                 flag: '🇨🇳',
                 country: 'CN',
-                url: 'https://ip.cip.cc',
-                parser: data => data.trim(),
-                isText: true
-            },
-            {
-                name: 'ip.cn',
-                flag: '🇨🇳',
-                country: 'CN',
-                url: 'https://ip.cn/api/index?ip=&type=0',
+                url: 'https://whois.pconline.com.cn/ipJson.jsp?json=true',
                 parser: data => data.ip
             },
             {
-                name: 'ipinfo.io',
+                name: 'qjqq',
+                flag: '🇨🇳',
+                country: 'CN',
+                url: 'https://api.qjqq.cn/api/Local',
+                parser: data => data.data?.ip
+            },
+            {
+                name: 'uomg',
+                flag: '🇨🇳',
+                country: 'CN',
+                url: 'https://api.uomg.com/api/visitor.info?skey=1',
+                parser: data => data.ip
+            },
+            {
+                name: 'vore.top',
                 flag: '🌍',
                 country: 'US',
-                url: 'https://ipinfo.io/json',
-                parser: data => data.ip
+                url: 'https://api.vore.top/api/IPdata',
+                parser: data => data.ipinfo?.ip || data.ip
             },
             {
-                name: 'ip-api.com',
+                name: 'ipapi.co',
                 flag: '🌍',
                 country: 'US',
-                url: 'http://ip-api.com/json/?fields=query',
-                parser: data => data.query
-            },
-            {
-                name: 'r.inews.qq.com',
-                flag: '🇨🇳',
-                country: 'CN',
-                url: 'https://r.inews.qq.com/api/ip2city',
+                url: 'https://ipapi.co/json/',
                 parser: data => data.ip
-            },
-            {
-                name: 'ip138.com',
-                flag: '🇨🇳',
-                country: 'CN',
-                url: 'https://api.ip138.com/query/',
-                parser: data => data.data?.[0]?.ip || data.ip
             }
         ];
 
