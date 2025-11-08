@@ -90,6 +90,21 @@
             text-decoration: underline;
         }
 
+        .country-flag {
+            width: 24px;
+            height: 18px;
+            margin-right: 8px;
+            border-radius: 2px;
+            vertical-align: middle;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .country-flag-emoji {
+            font-size: 1.3rem;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
         .table-container {
             background: white;
             border-radius: 12px;
@@ -892,6 +907,16 @@
             }
         }
 
+        // Convert country code to flag emoji
+        function countryCodeToFlag(countryCode) {
+            if (!countryCode || countryCode.length !== 2) return '';
+            const codePoints = countryCode
+                .toUpperCase()
+                .split('')
+                .map(char => 127397 + char.charCodeAt(0));
+            return String.fromCodePoint(...codePoints);
+        }
+
         // Update IP summary card with detailed information
         async function updateIPSummary(ip) {
             if (!ip) return;
@@ -914,6 +939,15 @@
                 }
             };
 
+            // Helper to update field with HTML content
+            const updateFieldHTML = (id, htmlContent, defaultValue = '-') => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.innerHTML = htmlContent || defaultValue;
+                    el.classList.remove('loading');
+                }
+            };
+
             // Try multiple APIs in sequence, prioritizing those good for Chinese IPs
             const apis = [
                 // API 1: ip.sb - excellent for Chinese IPs
@@ -929,6 +963,8 @@
                                 isp: data.isp || data.organization,
                                 asn: data.asn ? (data.asn.startsWith('AS') ? data.asn : `AS${data.asn}`) : null,
                                 country: data.country && data.country_code ? `${data.country} (${data.country_code})` : data.country,
+                                countryCode: data.country_code,
+                                countryName: data.country,
                                 region: data.region,
                                 city: data.city,
                                 timezone: data.timezone,
@@ -952,6 +988,8 @@
                                 isp: data.org || data.isp,
                                 asn: data.asn,
                                 country: data.country_name && data.country ? `${data.country_name} (${data.country})` : data.country,
+                                countryCode: data.country,
+                                countryName: data.country_name,
                                 region: data.region && data.region_code ? `${data.region} (${data.region_code})` : data.region,
                                 city: data.city,
                                 timezone: data.timezone,
@@ -975,6 +1013,8 @@
                                 isp: data.connection?.isp || data.connection?.org,
                                 asn: data.connection?.asn ? `AS${data.connection.asn}` : null,
                                 country: data.country && data.country_code ? `${data.country} (${data.country_code})` : data.country,
+                                countryCode: data.country_code,
+                                countryName: data.country,
                                 region: data.region && data.region_code ? `${data.region} (${data.region_code})` : data.region,
                                 city: data.city,
                                 timezone: data.timezone?.id,
@@ -998,6 +1038,8 @@
                                 isp: data.isp || data.org,
                                 asn: data.as,
                                 country: data.country && data.countryCode ? `${data.country} (${data.countryCode})` : data.country,
+                                countryCode: data.countryCode,
+                                countryName: data.country,
                                 region: data.regionName && data.region ? `${data.regionName} (${data.region})` : data.regionName,
                                 city: data.city,
                                 timezone: data.timezone,
@@ -1021,7 +1063,16 @@
 
                         updateField('summaryISP', parsed.isp);
                         updateField('summaryASN', parsed.asn);
-                        updateField('summaryCountry', parsed.country);
+
+                        // Display country with flag emoji
+                        if (parsed.countryCode) {
+                            const flagEmoji = countryCodeToFlag(parsed.countryCode);
+                            const countryDisplay = `<span class="country-flag-emoji">${flagEmoji}</span>${parsed.country || parsed.countryName}`;
+                            updateFieldHTML('summaryCountry', countryDisplay);
+                        } else {
+                            updateField('summaryCountry', parsed.country);
+                        }
+
                         updateField('summaryRegion', parsed.region);
                         updateField('summaryCity', parsed.city);
                         updateField('summaryTimezone', parsed.timezone);
