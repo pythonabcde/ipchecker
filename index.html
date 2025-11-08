@@ -115,6 +115,83 @@
             font-weight: 600;
         }
 
+        .connectivity-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .connectivity-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .connectivity-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .connectivity-item {
+            padding: 15px;
+            border-radius: 8px;
+            background: #f7fafc;
+            border-left: 4px solid #667eea;
+        }
+
+        .connectivity-item.testing {
+            border-left-color: #4299e1;
+        }
+
+        .connectivity-item.success {
+            border-left-color: #48bb78;
+        }
+
+        .connectivity-item.failed {
+            border-left-color: #f56565;
+        }
+
+        .connectivity-name {
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }
+
+        .connectivity-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .connectivity-badge.domestic {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .connectivity-badge.international {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .connectivity-latency {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-top: 5px;
+        }
+
+        .connectivity-latency.failed {
+            color: #f56565;
+            font-size: 1rem;
+        }
+
         .spinner {
             display: inline-block;
             width: 12px;
@@ -156,6 +233,10 @@
             .location-cell {
                 font-size: 0.75rem;
             }
+
+            .connectivity-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         @media (max-width: 480px) {
@@ -187,6 +268,12 @@
                 <tbody id="checksTableBody">
                 </tbody>
             </table>
+        </div>
+
+        <div class="connectivity-section">
+            <div class="connectivity-title">Connectivity Test</div>
+            <div class="connectivity-grid" id="connectivityGrid">
+            </div>
         </div>
     </div>
 
@@ -260,22 +347,7 @@
                 isText: true
             },
             {
-                name: 'ipify',
-                flag: '🌍',
-                country: 'US',
-                url: 'https://api.ipify.org?format=json',
-                parser: data => data.ip
-            },
-            {
-                name: 'ipify-text',
-                flag: '🌍',
-                country: 'US',
-                url: 'https://api.ipify.org',
-                parser: data => data.trim(),
-                isText: true
-            },
-            {
-                name: 'api64.ipify',
+                name: 'ipify64',
                 flag: '🌍',
                 country: 'US',
                 url: 'https://api64.ipify.org?format=json',
@@ -333,15 +405,11 @@
                 parser: data => data.ip
             },
             {
-                name: 'sohu',
+                name: 'ddnspod',
                 flag: '🇨🇳',
                 country: 'CN',
-                url: 'https://pv.sohu.com/cityjson?ie=utf-8',
-                parser: data => {
-                    const match = data.match(/"cip":\s*"([^"]+)"/);
-                    return match ? match[1] : null;
-                },
-                isText: true
+                url: 'https://www.ddnspod.com/api/myip',
+                parser: data => data.ip
             },
             {
                 name: 'cz88.net',
@@ -610,11 +678,132 @@
             updateStats();
         }
 
+        // Connectivity test configuration
+        const connectivityTests = [
+            {
+                name: 'ByteDance',
+                url: 'https://www.bytedance.com/favicon.ico',
+                type: 'domestic'
+            },
+            {
+                name: 'Bilibili',
+                url: 'https://www.bilibili.com/favicon.ico',
+                type: 'domestic'
+            },
+            {
+                name: 'jsDelivr',
+                url: 'https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js',
+                type: 'international'
+            },
+            {
+                name: 'YouTube',
+                url: 'https://www.youtube.com/favicon.ico',
+                type: 'international'
+            },
+            {
+                name: 'Google',
+                url: 'https://www.google.com/favicon.ico',
+                type: 'international'
+            },
+            {
+                name: 'GitHub',
+                url: 'https://github.com/favicon.ico',
+                type: 'international'
+            }
+        ];
+
+        // Test connectivity to a URL
+        async function testConnectivity(test) {
+            const startTime = performance.now();
+
+            try {
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 10000);
+
+                const response = await fetch(test.url, {
+                    method: 'HEAD',
+                    mode: 'no-cors',
+                    cache: 'no-cache',
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeout);
+                const endTime = performance.now();
+                const latency = Math.round(endTime - startTime);
+
+                return { success: true, latency };
+            } catch (error) {
+                const endTime = performance.now();
+                const latency = Math.round(endTime - startTime);
+
+                // Even with no-cors, if we get a response quickly, it's likely successful
+                if (latency < 10000) {
+                    return { success: true, latency };
+                }
+
+                return { success: false, latency: null };
+            }
+        }
+
+        // Create connectivity test item
+        function createConnectivityItem(test) {
+            const item = document.createElement('div');
+            item.className = 'connectivity-item testing';
+            item.id = `connectivity-${test.name.toLowerCase().replace(/\s+/g, '-')}`;
+
+            const badgeClass = test.type === 'domestic' ? 'domestic' : 'international';
+            const badgeText = test.type === 'domestic' ? 'Domestic' : 'International';
+
+            item.innerHTML = `
+                <div class="connectivity-name">
+                    ${test.name}
+                    <span class="connectivity-badge ${badgeClass}">${badgeText}</span>
+                </div>
+                <div class="connectivity-latency">
+                    <span class="spinner"></span> Testing...
+                </div>
+            `;
+
+            return item;
+        }
+
+        // Run connectivity tests
+        async function runConnectivityTests() {
+            const grid = document.getElementById('connectivityGrid');
+
+            // Create all test items
+            connectivityTests.forEach(test => {
+                grid.appendChild(createConnectivityItem(test));
+            });
+
+            // Run tests
+            for (const test of connectivityTests) {
+                const result = await testConnectivity(test);
+                const item = document.getElementById(`connectivity-${test.name.toLowerCase().replace(/\s+/g, '-')}`);
+                const latencyDiv = item.querySelector('.connectivity-latency');
+
+                if (result.success) {
+                    item.classList.remove('testing');
+                    item.classList.add('success');
+                    latencyDiv.textContent = `${result.latency}ms`;
+                } else {
+                    item.classList.remove('testing');
+                    item.classList.add('failed');
+                    latencyDiv.classList.add('failed');
+                    latencyDiv.textContent = 'Failed';
+                }
+            }
+        }
+
         // Execute after page load
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', init);
+            document.addEventListener('DOMContentLoaded', () => {
+                init();
+                runConnectivityTests();
+            });
         } else {
             init();
+            runConnectivityTests();
         }
     </script>
 </body>
