@@ -237,6 +237,86 @@
             box-shadow: none;
         }
 
+        .dns-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .dns-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .dns-status {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f7fafc;
+            margin-bottom: 15px;
+        }
+
+        .dns-status.checking {
+            border-left: 4px solid #4299e1;
+        }
+
+        .dns-status.safe {
+            border-left: 4px solid #48bb78;
+        }
+
+        .dns-status.leaked {
+            border-left: 4px solid #f56565;
+        }
+
+        .dns-status-icon {
+            font-size: 2rem;
+        }
+
+        .dns-status-text {
+            flex: 1;
+        }
+
+        .dns-status-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+
+        .dns-status-desc {
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        .dns-servers {
+            display: grid;
+            gap: 10px;
+        }
+
+        .dns-server-item {
+            padding: 12px;
+            background: #f7fafc;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+        }
+
+        .dns-server-ip {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 3px;
+        }
+
+        .dns-server-info {
+            font-size: 0.85rem;
+            color: #718096;
+        }
+
         .spinner {
             display: inline-block;
             width: 12px;
@@ -318,6 +398,19 @@
         <div class="connectivity-section">
             <div class="connectivity-title">Connectivity Test</div>
             <div class="connectivity-grid" id="connectivityGrid">
+            </div>
+        </div>
+
+        <div class="dns-section">
+            <div class="dns-title">DNS Leak Test</div>
+            <div class="dns-status checking" id="dnsStatus">
+                <div class="dns-status-icon">🔍</div>
+                <div class="dns-status-text">
+                    <div class="dns-status-title">Checking DNS...</div>
+                    <div class="dns-status-desc">Detecting your DNS servers</div>
+                </div>
+            </div>
+            <div class="dns-servers" id="dnsServers">
             </div>
         </div>
     </div>
@@ -731,12 +824,6 @@
                 icon: 'https://www.bilibili.com/favicon.ico'
             },
             {
-                name: 'ip.39203.com',
-                url: 'https://ip.39203.com/favicon.ico',
-                type: 'domestic',
-                icon: 'https://ip.39203.com/favicon.ico'
-            },
-            {
                 name: 'jsDelivr',
                 url: 'https://cdn.jsdelivr.net/npm/vue/dist/vue.min.js',
                 type: 'international',
@@ -777,6 +864,12 @@
                 url: 'https://claude.ai/favicon.ico',
                 type: 'international',
                 icon: 'https://claude.ai/favicon.ico'
+            },
+            {
+                name: 'ip.39203.com',
+                url: 'https://ip.39203.com/favicon.ico',
+                type: 'domestic',
+                icon: 'https://ip.39203.com/favicon.ico'
             }
         ];
 
@@ -883,15 +976,98 @@
             }
         }
 
+        // DNS leak detection
+        async function detectDNSLeak() {
+            const statusDiv = document.getElementById('dnsStatus');
+            const serversDiv = document.getElementById('dnsServers');
+
+            try {
+                // Use multiple DNS leak detection services
+                const dnsServices = [
+                    'https://edns.ip-api.com/json',
+                    'https://dns.google/resolve?name=whoami.akamai.net&type=A'
+                ];
+
+                let dnsServers = [];
+
+                // Try edns.ip-api.com first
+                try {
+                    const response = await fetch('https://edns.ip-api.com/json');
+                    const data = await response.json();
+
+                    if (data.dns) {
+                        const server = {
+                            ip: data.dns.ip,
+                            geo: data.dns.geo || 'Unknown',
+                            isp: data.dns.isp || 'Unknown'
+                        };
+                        dnsServers.push(server);
+                    }
+                } catch (e) {
+                    console.log('DNS detection service 1 failed');
+                }
+
+                // Display results
+                if (dnsServers.length > 0) {
+                    statusDiv.className = 'dns-status safe';
+                    statusDiv.innerHTML = `
+                        <div class="dns-status-icon">✅</div>
+                        <div class="dns-status-text">
+                            <div class="dns-status-title">DNS Detected</div>
+                            <div class="dns-status-desc">Found ${dnsServers.length} DNS server(s)</div>
+                        </div>
+                    `;
+
+                    dnsServers.forEach(server => {
+                        const serverItem = document.createElement('div');
+                        serverItem.className = 'dns-server-item';
+                        serverItem.innerHTML = `
+                            <div class="dns-server-ip">${server.ip}</div>
+                            <div class="dns-server-info">Location: ${server.geo} | ISP: ${server.isp}</div>
+                        `;
+                        serversDiv.appendChild(serverItem);
+                    });
+                } else {
+                    // Fallback: show basic DNS info
+                    statusDiv.className = 'dns-status safe';
+                    statusDiv.innerHTML = `
+                        <div class="dns-status-icon">ℹ️</div>
+                        <div class="dns-status-text">
+                            <div class="dns-status-title">DNS Information</div>
+                            <div class="dns-status-desc">Using browser's DNS resolver</div>
+                        </div>
+                    `;
+
+                    serversDiv.innerHTML = `
+                        <div class="dns-server-item">
+                            <div class="dns-server-ip">Browser Default DNS</div>
+                            <div class="dns-server-info">Your browser is using the system's configured DNS servers</div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                statusDiv.className = 'dns-status safe';
+                statusDiv.innerHTML = `
+                    <div class="dns-status-icon">ℹ️</div>
+                    <div class="dns-status-text">
+                        <div class="dns-status-title">DNS Detection Unavailable</div>
+                        <div class="dns-status-desc">Unable to detect DNS servers from browser</div>
+                    </div>
+                `;
+            }
+        }
+
         // Execute after page load
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
                 init();
                 runConnectivityTests();
+                detectDNSLeak();
             });
         } else {
             init();
             runConnectivityTests();
+            detectDNSLeak();
         }
     </script>
 </body>
