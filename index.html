@@ -1561,19 +1561,10 @@
             try {
                 let allDnsServers = [];
 
-                // Method 1: Try WebRTC-based DNS detection (like ipleak.net uses)
-                try {
-                    const webrtcServers = await detectDNSviaWebRTC();
-                    webrtcServers.forEach(server => {
-                        if (!allDnsServers.find(s => s.ip === server.ip)) {
-                            allDnsServers.push(server);
-                        }
-                    });
-                } catch (e) {
-                    console.log('WebRTC DNS detection failed:', e);
-                }
+                // Note: WebRTC method is disabled because it detects the user's public IP, not DNS servers
+                // Use dedicated DNS leak detection services instead
 
-                // Method 2: Use multiple DNS leak detection services in parallel
+                // Method 1: Use multiple DNS leak detection services in parallel
                 const dnsDetectionPromises = [];
 
                 // Service 1: bash.ws (most comprehensive) - AGGRESSIVE MODE
@@ -1726,7 +1717,61 @@
                     }
                 })());
 
-                // Service 4: whoer.net DNS detection
+                // Service 4: ipleak.net DNS detection
+                dnsDetectionPromises.push((async () => {
+                    try {
+                        const servers = [];
+                        const sessionId = Math.random().toString(36).substring(2, 15);
+
+                        // Trigger DNS lookups to ipleak.net domains
+                        const ipleakDomains = [];
+                        for (let i = 0; i < 30; i++) {
+                            const randomStr = Math.random().toString(36).substring(2, 12);
+                            ipleakDomains.push(`${randomStr}-${i}.${sessionId}.ipleak.net`);
+                        }
+
+                        // Trigger DNS queries
+                        ipleakDomains.forEach((domain, index) => {
+                            setTimeout(() => {
+                                const img = new Image();
+                                img.src = `https://${domain}/favicon.ico?${Date.now()}`;
+                            }, index * 40);
+                        });
+
+                        await new Promise(resolve => setTimeout(resolve, 6000));
+
+                        // Try to fetch results (note: ipleak.net API may not be publicly available)
+                        try {
+                            const response = await fetch(`https://ipleak.net/api/dns/${sessionId}`);
+                            if (response.ok) {
+                                const data = await response.json();
+                                if (data && Array.isArray(data)) {
+                                    data.forEach(server => {
+                                        if (server.ip) {
+                                            servers.push({
+                                                ip: server.ip,
+                                                country_code: server.country_code || '',
+                                                country_name: server.country || '',
+                                                city: server.city || '',
+                                                geo: server.geo || 'Unknown',
+                                                isp: server.isp || 'Unknown'
+                                            });
+                                        }
+                                    });
+                                }
+                            }
+                        } catch (e) {
+                            console.log('ipleak.net API query failed:', e);
+                        }
+
+                        return servers;
+                    } catch (e) {
+                        console.log('ipleak.net failed:', e);
+                        return [];
+                    }
+                })());
+
+                // Service 5: whoer.net DNS detection
                 dnsDetectionPromises.push((async () => {
                     try {
                         const servers = [];
@@ -1749,9 +1794,14 @@
                 // Wait for all detection methods to complete
                 const results = await Promise.all(dnsDetectionPromises);
 
-                // Merge all results
+                // Merge all results, filtering out the user's public IP
                 results.forEach(servers => {
                     servers.forEach(server => {
+                        // Skip if this IP is the user's public IP (not a DNS server)
+                        if (server.ip === mostCommonIP) {
+                            console.log(`Filtering out user's public IP: ${server.ip}`);
+                            return;
+                        }
                         if (!allDnsServers.find(s => s.ip === server.ip)) {
                             allDnsServers.push(server);
                         }
@@ -1760,9 +1810,9 @@
 
                 // Display results
                 if (allDnsServers.length > 0) {
-                    // Remove duplicates based on IP
+                    // Remove duplicates based on IP and filter out user's public IP again
                     const uniqueServers = allDnsServers.filter((server, index, self) =>
-                        index === self.findIndex(s => s.ip === server.ip)
+                        index === self.findIndex(s => s.ip === server.ip) && server.ip !== mostCommonIP
                     );
 
                     statusDiv.className = 'dns-status safe';
