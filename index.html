@@ -1561,6 +1561,9 @@
                                         if (!bashServers.find(s => s.ip === server.ip)) {
                                             bashServers.push({
                                                 ip: server.ip,
+                                                country_code: server.country_code || server.country || '',
+                                                country_name: server.country_name || '',
+                                                city: server.city || '',
                                                 geo: `${server.country_name || ''} ${server.city || ''}`.trim() || 'Unknown',
                                                 isp: server.asn || server.isp || 'Unknown'
                                             });
@@ -1618,6 +1621,9 @@
                         if (data.dns && data.dns.ip) {
                             return [{
                                 ip: data.dns.ip,
+                                country_code: data.dns.country_code || '',
+                                country_name: data.dns.country || '',
+                                city: data.dns.city || '',
                                 geo: data.dns.geo || 'Unknown',
                                 isp: data.dns.isp || 'Unknown'
                             }];
@@ -1680,9 +1686,26 @@
                     uniqueServers.forEach((server, index) => {
                         const serverItem = document.createElement('div');
                         serverItem.className = 'dns-server-item';
+
+                        // Build location display with flag emoji
+                        let locationDisplay = '';
+                        if (server.country_code) {
+                            const flagEmoji = countryCodeToFlag(server.country_code);
+                            if (server.country_name) {
+                                locationDisplay = `<span class="country-flag-emoji">${flagEmoji}</span>${server.country_name}`;
+                                if (server.city) {
+                                    locationDisplay += ` ${server.city}`;
+                                }
+                            } else {
+                                locationDisplay = `<span class="country-flag-emoji">${flagEmoji}</span>${server.geo}`;
+                            }
+                        } else {
+                            locationDisplay = server.geo;
+                        }
+
                         serverItem.innerHTML = `
                             <div class="dns-server-ip">DNS ${index + 1}: ${server.ip}</div>
-                            <div class="dns-server-info">Location: ${server.geo} | Provider: ${server.isp}</div>
+                            <div class="dns-server-info">Location: ${locationDisplay} | Provider: ${server.isp}</div>
                         `;
                         serversDiv.appendChild(serverItem);
                     });
