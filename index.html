@@ -317,6 +317,54 @@
             color: #718096;
         }
 
+        .info-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .info-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .info-item {
+            padding: 12px;
+            background: #f7fafc;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+        }
+
+        .info-item-label {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        .info-item-value {
+            color: #2d3748;
+            font-size: 0.9rem;
+            word-break: break-word;
+        }
+
+        .info-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
         .spinner {
             display: inline-block;
             width: 12px;
@@ -411,6 +459,42 @@
                 </div>
             </div>
             <div class="dns-servers" id="dnsServers">
+            </div>
+        </div>
+
+        <div class="info-section">
+            <div class="info-title">Detected Information</div>
+            <div class="info-grid" id="detectedInfo">
+            </div>
+        </div>
+
+        <div class="info-section">
+            <div class="info-title">System Information</div>
+            <div class="info-grid" id="systemInfo">
+            </div>
+        </div>
+
+        <div class="info-section">
+            <div class="info-title">Screen Information</div>
+            <div class="info-grid" id="screenInfo">
+            </div>
+        </div>
+
+        <div class="info-section">
+            <div class="info-title">Plugins Information</div>
+            <div class="info-list" id="pluginsInfo">
+            </div>
+        </div>
+
+        <div class="info-section">
+            <div class="info-title">MIME Types Information</div>
+            <div class="info-list" id="mimeTypesInfo">
+            </div>
+        </div>
+
+        <div class="info-section">
+            <div class="info-title">HTTP Request Headers</div>
+            <div class="info-grid" id="httpHeaders">
             </div>
         </div>
     </div>
@@ -976,7 +1060,7 @@
             }
         }
 
-        // DNS leak detection
+        // DNS leak detection - Enhanced to capture ALL DNS servers
         async function detectDNSLeak() {
             const statusDiv = document.getElementById('dnsStatus');
             const serversDiv = document.getElementById('dnsServers');
@@ -985,69 +1069,102 @@
                 let allDnsServers = [];
 
                 // Generate unique session ID
-                const sessionId = Math.random().toString(36).substring(2, 15);
+                const sessionId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 
-                // Method 1: Trigger multiple DNS queries using random subdomains
-                // This forces the browser to query all configured DNS servers
+                // Method 1: Aggressive DNS query triggering using multiple techniques
+                // Create 20 unique random subdomains to force DNS queries
                 const randomDomains = [];
-                for (let i = 0; i < 10; i++) {
+                for (let i = 0; i < 20; i++) {
                     const randomStr = Math.random().toString(36).substring(2, 15);
-                    randomDomains.push(`${randomStr}-${sessionId}.bash.ws`);
+                    randomDomains.push(`${randomStr}-${i}-${sessionId}.bash.ws`);
                 }
 
-                // Trigger DNS lookups by creating image requests
-                const dnsPromises = randomDomains.map(domain => {
-                    return new Promise((resolve) => {
+                // Trigger DNS lookups using multiple methods
+                const dnsPromises = [];
+
+                // Method A: Image requests
+                randomDomains.forEach(domain => {
+                    dnsPromises.push(new Promise((resolve) => {
                         const img = new Image();
                         img.onload = () => resolve();
                         img.onerror = () => resolve();
-                        img.src = `https://${domain}/1x1.gif?t=${Date.now()}`;
-                        setTimeout(resolve, 1000); // Timeout after 1 second
-                    });
+                        img.src = `https://${domain}/pixel.gif?t=${Date.now()}&r=${Math.random()}`;
+                        setTimeout(resolve, 2000);
+                    }));
                 });
 
-                // Wait for all DNS lookups to complete
+                // Method B: Script tag requests (triggers DNS differently)
+                randomDomains.slice(0, 5).forEach(domain => {
+                    dnsPromises.push(new Promise((resolve) => {
+                        const script = document.createElement('script');
+                        script.onload = () => resolve();
+                        script.onerror = () => resolve();
+                        script.src = `https://${domain}/js.js?t=${Date.now()}`;
+                        document.head.appendChild(script);
+                        setTimeout(() => {
+                            script.remove();
+                            resolve();
+                        }, 2000);
+                    }));
+                });
+
+                // Method C: Fetch requests to trigger DNS
+                randomDomains.slice(0, 10).forEach(domain => {
+                    dnsPromises.push(
+                        fetch(`https://${domain}/test`, {
+                            mode: 'no-cors',
+                            cache: 'no-cache'
+                        }).catch(() => {})
+                    );
+                });
+
+                // Wait for all DNS lookup attempts
                 await Promise.all(dnsPromises);
 
-                // Wait additional time for DNS servers to register
-                await new Promise(resolve => setTimeout(resolve, 3000));
+                // Wait additional time for DNS servers to fully register
+                await new Promise(resolve => setTimeout(resolve, 5000));
 
-                // Method 2: Query bash.ws API to get detected DNS servers
-                try {
-                    const response = await fetch(`https://bash.ws/dnsleak/test/${sessionId}`);
-                    const data = await response.json();
+                // Query bash.ws API multiple times to ensure we get all DNS servers
+                for (let attempt = 0; attempt < 3; attempt++) {
+                    try {
+                        const response = await fetch(`https://bash.ws/dnsleak/test/${sessionId}?t=${Date.now()}`);
+                        const data = await response.json();
 
-                    if (data && Array.isArray(data)) {
-                        data.forEach(server => {
-                            if (!allDnsServers.find(s => s.ip === server.ip)) {
-                                allDnsServers.push({
-                                    ip: server.ip,
-                                    geo: `${server.country_name || ''} ${server.city || ''}`.trim() || 'Unknown',
-                                    isp: server.asn || server.isp || 'Unknown'
-                                });
-                            }
-                        });
+                        if (data && Array.isArray(data)) {
+                            data.forEach(server => {
+                                if (!allDnsServers.find(s => s.ip === server.ip)) {
+                                    allDnsServers.push({
+                                        ip: server.ip,
+                                        geo: `${server.country_name || ''} ${server.city || ''}`.trim() || 'Unknown',
+                                        isp: server.asn || server.isp || 'Unknown'
+                                    });
+                                }
+                            });
+                        }
+                    } catch (e) {
+                        console.log(`bash.ws API attempt ${attempt + 1} failed:`, e);
                     }
-                } catch (e) {
-                    console.log('bash.ws API failed:', e);
+
+                    // Wait between attempts
+                    if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 2000));
                 }
 
-                // Method 3: Use edns.ip-api.com as fallback
-                if (allDnsServers.length === 0) {
-                    try {
-                        const response1 = await fetch('https://edns.ip-api.com/json');
-                        const data1 = await response1.json();
+                // Method 2: Try alternative DNS detection services
+                try {
+                    const response1 = await fetch('https://edns.ip-api.com/json');
+                    const data1 = await response1.json();
 
-                        if (data1.dns && data1.dns.ip) {
+                    if (data1.dns && data1.dns.ip) {
+                        if (!allDnsServers.find(s => s.ip === data1.dns.ip)) {
                             allDnsServers.push({
                                 ip: data1.dns.ip,
                                 geo: data1.dns.geo || 'Unknown',
                                 isp: data1.dns.isp || 'Unknown'
                             });
                         }
-                    } catch (e) {
-                        console.log('edns.ip-api.com failed');
                     }
+                } catch (e) {
+                    console.log('edns.ip-api.com failed');
                 }
 
                 // Display results
@@ -1106,17 +1223,194 @@
             }
         }
 
+        // Collect detected browser information
+        function collectDetectedInfo() {
+            const detectedInfoDiv = document.getElementById('detectedInfo');
+
+            const info = [
+                { label: 'User Agent', value: navigator.userAgent || 'Unknown' },
+                { label: 'Accept Document Types', value: 'text/html, application/xhtml+xml, application/xml' },
+                { label: 'Accept Language', value: navigator.language || navigator.userLanguage || 'Unknown' },
+                { label: 'Accept Encoding', value: 'gzip, deflate, br' },
+                { label: 'Do Not Track', value: navigator.doNotTrack || 'Not set' }
+            ];
+
+            info.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'info-item';
+                itemDiv.innerHTML = `
+                    <div class="info-item-label">${item.label}</div>
+                    <div class="info-item-value">${item.value}</div>
+                `;
+                detectedInfoDiv.appendChild(itemDiv);
+            });
+        }
+
+        // Collect system information
+        function collectSystemInfo() {
+            const systemInfoDiv = document.getElementById('systemInfo');
+
+            const info = [
+                { label: 'Platform', value: navigator.platform || 'Unknown' },
+                { label: 'User Agent', value: navigator.userAgent || 'Unknown' },
+                { label: 'Cookies Enabled', value: navigator.cookieEnabled ? 'Yes' : 'No' },
+                { label: 'Java Enabled', value: navigator.javaEnabled ? navigator.javaEnabled() ? 'Yes' : 'No' : 'Unknown' },
+                { label: 'Online Status', value: navigator.onLine ? 'Online' : 'Offline' },
+                { label: 'Language', value: navigator.language || 'Unknown' },
+                { label: 'Languages', value: navigator.languages ? navigator.languages.join(', ') : 'Unknown' },
+                { label: 'Hardware Concurrency', value: navigator.hardwareConcurrency || 'Unknown' },
+                { label: 'Device Memory', value: navigator.deviceMemory ? `${navigator.deviceMemory} GB` : 'Unknown' },
+                { label: 'Max Touch Points', value: navigator.maxTouchPoints || '0' }
+            ];
+
+            info.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'info-item';
+                itemDiv.innerHTML = `
+                    <div class="info-item-label">${item.label}</div>
+                    <div class="info-item-value">${item.value}</div>
+                `;
+                systemInfoDiv.appendChild(itemDiv);
+            });
+        }
+
+        // Collect screen information
+        function collectScreenInfo() {
+            const screenInfoDiv = document.getElementById('screenInfo');
+
+            const info = [
+                { label: 'Screen Resolution', value: `${screen.width} x ${screen.height}` },
+                { label: 'Available Screen', value: `${screen.availWidth} x ${screen.availHeight}` },
+                { label: 'Color Depth', value: `${screen.colorDepth} bits` },
+                { label: 'Pixel Depth', value: `${screen.pixelDepth} bits` },
+                { label: 'Device Pixel Ratio', value: window.devicePixelRatio || 1 },
+                { label: 'Screen Orientation', value: screen.orientation ? screen.orientation.type : 'Unknown' },
+                { label: 'Inner Window Size', value: `${window.innerWidth} x ${window.innerHeight}` },
+                { label: 'Outer Window Size', value: `${window.outerWidth} x ${window.outerHeight}` }
+            ];
+
+            info.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'info-item';
+                itemDiv.innerHTML = `
+                    <div class="info-item-label">${item.label}</div>
+                    <div class="info-item-value">${item.value}</div>
+                `;
+                screenInfoDiv.appendChild(itemDiv);
+            });
+        }
+
+        // Collect plugins information
+        function collectPluginsInfo() {
+            const pluginsInfoDiv = document.getElementById('pluginsInfo');
+
+            if (navigator.plugins && navigator.plugins.length > 0) {
+                const plugins = Array.from(navigator.plugins);
+                plugins.forEach((plugin, index) => {
+                    const pluginDiv = document.createElement('div');
+                    pluginDiv.className = 'info-item';
+                    pluginDiv.innerHTML = `
+                        <div class="info-item-label">Plugin ${index + 1}: ${plugin.name}</div>
+                        <div class="info-item-value">
+                            ${plugin.description || 'No description'}<br>
+                            <small>Filename: ${plugin.filename || 'Unknown'}</small>
+                        </div>
+                    `;
+                    pluginsInfoDiv.appendChild(pluginDiv);
+                });
+            } else {
+                pluginsInfoDiv.innerHTML = `
+                    <div class="info-item">
+                        <div class="info-item-label">No Plugins Detected</div>
+                        <div class="info-item-value">Modern browsers may restrict plugin detection for privacy reasons</div>
+                    </div>
+                `;
+            }
+        }
+
+        // Collect MIME types information
+        function collectMimeTypesInfo() {
+            const mimeTypesInfoDiv = document.getElementById('mimeTypesInfo');
+
+            if (navigator.mimeTypes && navigator.mimeTypes.length > 0) {
+                const mimeTypes = Array.from(navigator.mimeTypes);
+                mimeTypes.forEach((mimeType, index) => {
+                    const mimeDiv = document.createElement('div');
+                    mimeDiv.className = 'info-item';
+                    mimeDiv.innerHTML = `
+                        <div class="info-item-label">${index + 1}. ${mimeType.type}</div>
+                        <div class="info-item-value">
+                            Description: ${mimeType.description || 'Unknown'}<br>
+                            <small>Suffixes: ${mimeType.suffixes || 'None'}</small>
+                        </div>
+                    `;
+                    mimeTypesInfoDiv.appendChild(mimeDiv);
+                });
+            } else {
+                mimeTypesInfoDiv.innerHTML = `
+                    <div class="info-item">
+                        <div class="info-item-label">No MIME Types Detected</div>
+                        <div class="info-item-value">Modern browsers may restrict MIME type detection for privacy reasons</div>
+                    </div>
+                `;
+            }
+        }
+
+        // Collect HTTP request headers
+        async function collectHTTPHeaders() {
+            const httpHeadersDiv = document.getElementById('httpHeaders');
+
+            try {
+                // Use httpbin.org to get our request headers
+                const response = await fetch('https://httpbin.org/headers');
+                const data = await response.json();
+
+                if (data && data.headers) {
+                    Object.entries(data.headers).forEach(([key, value]) => {
+                        const headerDiv = document.createElement('div');
+                        headerDiv.className = 'info-item';
+                        headerDiv.innerHTML = `
+                            <div class="info-item-label">${key}</div>
+                            <div class="info-item-value">${value}</div>
+                        `;
+                        httpHeadersDiv.appendChild(headerDiv);
+                    });
+                } else {
+                    throw new Error('Invalid response');
+                }
+            } catch (error) {
+                httpHeadersDiv.innerHTML = `
+                    <div class="info-item">
+                        <div class="info-item-label">Headers Detection Failed</div>
+                        <div class="info-item-value">Unable to retrieve HTTP request headers</div>
+                    </div>
+                `;
+            }
+        }
+
         // Execute after page load
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
                 init();
                 runConnectivityTests();
                 detectDNSLeak();
+                collectDetectedInfo();
+                collectSystemInfo();
+                collectScreenInfo();
+                collectPluginsInfo();
+                collectMimeTypesInfo();
+                collectHTTPHeaders();
             });
         } else {
             init();
             runConnectivityTests();
             detectDNSLeak();
+            collectDetectedInfo();
+            collectSystemInfo();
+            collectScreenInfo();
+            collectPluginsInfo();
+            collectMimeTypesInfo();
+            collectHTTPHeaders();
         }
     </script>
 </body>
