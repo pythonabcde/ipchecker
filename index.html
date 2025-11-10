@@ -177,6 +177,13 @@
             background: #f7fafc;
             border-top: 3px solid #667eea;
             border-bottom: 3px solid #667eea;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.2s;
+        }
+
+        tbody tr.divider:hover {
+            background: #edf2f7;
         }
 
         tbody tr.divider td {
@@ -185,6 +192,24 @@
             font-weight: 600;
             color: #667eea;
             font-size: 0.9rem;
+        }
+
+        tbody tr.duplicate-row {
+            display: none;
+        }
+
+        tbody tr.duplicate-row.show {
+            display: table-row;
+        }
+
+        .toggle-icon {
+            display: inline-block;
+            transition: transform 0.3s;
+            margin-right: 5px;
+        }
+
+        .toggle-icon.expanded {
+            transform: rotate(180deg);
         }
 
         td {
@@ -1147,17 +1172,53 @@ var _hmt = _hmt || [];
             if (duplicateIPRows.length > 0) {
                 const dividerRow = document.createElement('tr');
                 dividerRow.className = 'divider';
+                dividerRow.id = 'duplicate-divider';
                 dividerRow.innerHTML = `
                     <td colspan="3">
-                        ↑ ${uniqueIPCount} Unique IP${uniqueIPCount > 1 ? 's' : ''} ↑
-                        &nbsp;&nbsp;|&nbsp;&nbsp;
-                        ↓ ${duplicateIPRows.length} Duplicate Detection${duplicateIPRows.length > 1 ? 's' : ''} ↓
+                        <span class="toggle-icon" id="toggle-icon">▼</span>
+                        <span id="divider-text">
+                            ${uniqueIPCount} Unique IP${uniqueIPCount > 1 ? 's' : ''} detected
+                            &nbsp;|&nbsp;
+                            ${duplicateIPRows.length} duplicate detection${duplicateIPRows.length > 1 ? 's' : ''} hidden (click to expand)
+                        </span>
                     </td>
                 `;
+
+                // Add click event to toggle duplicate rows
+                dividerRow.addEventListener('click', function() {
+                    const duplicateRows = document.querySelectorAll('.duplicate-row');
+                    const toggleIcon = document.getElementById('toggle-icon');
+                    const dividerText = document.getElementById('divider-text');
+                    const isExpanded = toggleIcon.classList.contains('expanded');
+
+                    if (isExpanded) {
+                        // Collapse
+                        duplicateRows.forEach(row => row.classList.remove('show'));
+                        toggleIcon.classList.remove('expanded');
+                        dividerText.innerHTML = `
+                            ${uniqueIPCount} Unique IP${uniqueIPCount > 1 ? 's' : ''} detected
+                            &nbsp;|&nbsp;
+                            ${duplicateIPRows.length} duplicate detection${duplicateIPRows.length > 1 ? 's' : ''} hidden (click to expand)
+                        `;
+                    } else {
+                        // Expand
+                        duplicateRows.forEach(row => row.classList.add('show'));
+                        toggleIcon.classList.add('expanded');
+                        dividerText.innerHTML = `
+                            ${uniqueIPCount} Unique IP${uniqueIPCount > 1 ? 's' : ''} detected
+                            &nbsp;|&nbsp;
+                            ${duplicateIPRows.length} duplicate detection${duplicateIPRows.length > 1 ? 's' : ''} shown (click to collapse)
+                        `;
+                    }
+                });
+
                 tbody.appendChild(dividerRow);
 
-                // Add duplicate IP rows
-                duplicateIPRows.forEach(data => tbody.appendChild(data.row));
+                // Add duplicate IP rows with duplicate-row class (hidden by default)
+                duplicateIPRows.forEach(data => {
+                    data.row.classList.add('duplicate-row');
+                    tbody.appendChild(data.row);
+                });
             }
 
             console.log(`Table reordered: ${uniqueIPRows.length} unique (CN first), ${duplicateIPRows.length} duplicates (grouped by IP and country)`);
