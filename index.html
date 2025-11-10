@@ -1080,27 +1080,37 @@ var _hmt = _hmt || [];
             };
 
             // For each unique IP, take the first checker as representative
+            // Prioritize CN checkers if available
             const uniqueIPData = [];
             for (const [ip, checkers] of Object.entries(ipGroups)) {
-                const firstChecker = checkers[0];
-                const country = getCheckerCountry(firstChecker);
-                const row = document.getElementById(`row-${firstChecker}`);
+                // Find a CN checker first, otherwise use the first one
+                let representativeChecker = checkers[0];
+                for (const checker of checkers) {
+                    if (getCheckerCountry(checker) === 'CN') {
+                        representativeChecker = checker;
+                        break;
+                    }
+                }
+
+                const country = getCheckerCountry(representativeChecker);
+                const row = document.getElementById(`row-${representativeChecker}`);
                 if (row) {
                     uniqueIPData.push({ ip, row, country, isCN: country === 'CN' });
                 }
 
-                // All other checkers with this IP go to duplicates
-                for (let i = 1; i < checkers.length; i++) {
-                    const duplicateChecker = checkers[i];
-                    const duplicateCountry = getCheckerCountry(duplicateChecker);
-                    const duplicateRow = document.getElementById(`row-${duplicateChecker}`);
-                    if (duplicateRow) {
-                        duplicateIPRows.push({
-                            ip,
-                            row: duplicateRow,
-                            country: duplicateCountry,
-                            checkerName: duplicateChecker
-                        });
+                // All other checkers with this IP go to duplicates (except the representative)
+                for (const checker of checkers) {
+                    if (checker !== representativeChecker) {
+                        const duplicateCountry = getCheckerCountry(checker);
+                        const duplicateRow = document.getElementById(`row-${checker}`);
+                        if (duplicateRow) {
+                            duplicateIPRows.push({
+                                ip,
+                                row: duplicateRow,
+                                country: duplicateCountry,
+                                checkerName: checker
+                            });
+                        }
                     }
                 }
             }
