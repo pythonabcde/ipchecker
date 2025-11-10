@@ -301,6 +301,11 @@
             border-left-color: #f56565;
         }
 
+        .connectivity-item.skipped {
+            border-left-color: #a0aec0;
+            background: #edf2f7;
+        }
+
         .connectivity-name {
             font-weight: 600;
             font-size: 1rem;
@@ -347,6 +352,11 @@
 
         .connectivity-latency.failed {
             color: #f56565;
+            font-size: 1rem;
+        }
+
+        .connectivity-latency.skipped {
+            color: #718096;
             font-size: 1rem;
         }
 
@@ -844,6 +854,7 @@ var _hmt = _hmt || [];
         let totalCount = ipCheckers.length;
         let detectedIPs = {};
         let mostCommonIP = null;
+        let userCountryCode = null; // Store user's country code
         let locationCache = {}; // Cache for location data
         let locationDataCache = {}; // Cache for detailed location data (ISP, ASN, etc.)
 
@@ -1203,6 +1214,11 @@ var _hmt = _hmt || [];
                         updateField('summaryISP', parsed.isp);
                         updateField('summaryASN', parsed.asn);
 
+                        // Store country code for connectivity tests
+                        if (parsed.countryCode) {
+                            userCountryCode = parsed.countryCode.toUpperCase();
+                        }
+
                         // Display country with flag image
                         if (parsed.countryCode) {
                             const flagImg = countryCodeToFlag(parsed.countryCode);
@@ -1491,11 +1507,26 @@ var _hmt = _hmt || [];
                 grid.appendChild(createConnectivityItem(test));
             });
 
+            // Check if user is from China
+            const isChinaIP = userCountryCode === 'CN';
+
             // Run tests
             for (const test of connectivityTests) {
-                const result = await testConnectivity(test);
                 const item = document.getElementById(`connectivity-${test.name.toLowerCase().replace(/\s+/g, '-').replace(/\./g, '-')}`);
                 const latencyDiv = item.querySelector('.connectivity-latency');
+
+                // Skip YouTube and Google tests for China IPs
+                if (isChinaIP && (test.name === 'YouTube' || test.name === 'Google')) {
+                    item.classList.remove('testing');
+                    item.classList.add('skipped');
+                    latencyDiv.classList.add('skipped');
+                    latencyDiv.innerHTML = `
+                        <span>Not tested</span>
+                    `;
+                    continue;
+                }
+
+                const result = await testConnectivity(test);
 
                 if (result.success) {
                     item.classList.remove('testing');
