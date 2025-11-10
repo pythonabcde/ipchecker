@@ -1233,8 +1233,15 @@ var _hmt = _hmt || [];
             console.log('All IP checks complete. Starting batch location query...');
             console.log(`Found ${Object.keys(ipCheckResults).length} unique IP(s) from ${totalCount} sources`);
 
+            // Process mostCommonIP first to get country code ASAP for connectivity tests
+            const ips = Object.keys(ipCheckResults);
+            const sortedIPs = mostCommonIP ? [mostCommonIP, ...ips.filter(ip => ip !== mostCommonIP)] : ips;
+
             // For each unique IP
-            for (const [ip, data] of Object.entries(ipCheckResults)) {
+            for (const ip of sortedIPs) {
+                const data = ipCheckResults[ip];
+                if (!data) continue;
+
                 // If this IP already has location data from source (like ip.sb-geoip), use it
                 let locationData = data.locationData;
 
@@ -1263,9 +1270,12 @@ var _hmt = _hmt || [];
                 ipCheckResults[ip].country_code = finalLocationData.country_code;
 
                 // Set userCountryCode from the most common IP (for connectivity tests)
+                // Trigger test immediately once we have the country code for mostCommonIP
                 if (!userCountryCode && ip === mostCommonIP && finalLocationData.country_code) {
                     userCountryCode = finalLocationData.country_code;
                     console.log(`Set userCountryCode to ${userCountryCode} from most common IP`);
+                    // Test YouTube and Google immediately if needed
+                    testBlockedSitesIfNeeded();
                 }
 
                 // Update all rows that use this IP
@@ -1299,9 +1309,6 @@ var _hmt = _hmt || [];
 
             // Reorder table to show unique IPs first
             reorderTableRows();
-
-            // Test YouTube and Google if needed (now that we have country code)
-            testBlockedSitesIfNeeded();
         }
 
         // Update statistics
@@ -1506,6 +1513,7 @@ var _hmt = _hmt || [];
                         // Store country code for connectivity tests
                         if (parsed.countryCode) {
                             userCountryCode = parsed.countryCode.toUpperCase();
+                            console.log(`updateIPSummary: set userCountryCode to ${userCountryCode}`);
                             // Test YouTube and Google if not China IP
                             testBlockedSitesIfNeeded();
                         }
@@ -1827,21 +1835,26 @@ var _hmt = _hmt || [];
 
         // Test YouTube and Google connectivity (called after country is determined)
         async function testBlockedSitesIfNeeded() {
+            // Only test if country code is available and NOT China
+            if (!userCountryCode) {
+                console.log('Skipping YouTube and Google tests - country not determined yet');
+                return;
+            }
+
+            if (userCountryCode === 'CN') {
+                console.log('Skipping YouTube and Google tests - China IP detected');
+                return;
+            }
+
             // Prevent duplicate calls
             if (blockedSitesTestStarted) {
                 console.log('YouTube and Google tests already started, skipping duplicate call');
                 return;
             }
 
-            // Only test if country code is available and NOT China
-            if (!userCountryCode || userCountryCode === 'CN') {
-                console.log('Skipping YouTube and Google tests (China IP or country not determined yet)');
-                return;
-            }
-
             // Mark as started to prevent duplicate calls
             blockedSitesTestStarted = true;
-            console.log(`Country is ${userCountryCode}, testing YouTube and Google`);
+            console.log(`Country is ${userCountryCode}, starting YouTube and Google tests`);
 
             // Find YouTube and Google tests
             const blockedSiteTests = connectivityTests.filter(test =>
