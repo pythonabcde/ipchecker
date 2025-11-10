@@ -194,6 +194,44 @@
             transform: scale(1.2);
         }
 
+        .domain-tooltip {
+            position: fixed;
+            background: #2d3748;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            z-index: 10000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            pointer-events: none;
+            animation: fadeIn 0.2s ease-in;
+        }
+
+        .domain-tooltip.fade-out {
+            animation: fadeOut 0.3s ease-out;
+            opacity: 0;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-5px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
+
         .ip-cell {
             font-family: 'Courier New', monospace;
             font-weight: 600;
@@ -819,6 +857,32 @@ var _hmt = _hmt || [];
             }
         }
 
+        // Show domain tooltip for mobile devices
+        function showDomainTooltip(domain, event) {
+            // Remove any existing tooltip
+            const existingTooltip = document.querySelector('.domain-tooltip');
+            if (existingTooltip) {
+                existingTooltip.remove();
+            }
+
+            // Create tooltip
+            const tooltip = document.createElement('div');
+            tooltip.className = 'domain-tooltip';
+            tooltip.textContent = domain;
+            document.body.appendChild(tooltip);
+
+            // Position tooltip near the clicked element
+            const rect = event.target.getBoundingClientRect();
+            tooltip.style.top = `${rect.bottom + 5}px`;
+            tooltip.style.left = `${rect.left}px`;
+
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                tooltip.classList.add('fade-out');
+                setTimeout(() => tooltip.remove(), 300);
+            }, 3000);
+        }
+
         // Create table row
         function createTableRow(checker) {
             const tr = document.createElement('tr');
@@ -826,7 +890,7 @@ var _hmt = _hmt || [];
             const domain = extractDomain(checker.url);
             tr.innerHTML = `
                 <td class="source-cell">
-                    <span class="source-flag" title="${domain}">${checker.flag}</span>
+                    <span class="source-flag" title="${domain}" data-domain="${domain}">${checker.flag}</span>
                     ${checker.name}
                 </td>
                 <td class="ip-cell">
@@ -838,6 +902,14 @@ var _hmt = _hmt || [];
                     <span class="status-loading">-</span>
                 </td>
             `;
+
+            // Add click event for mobile devices
+            const flagSpan = tr.querySelector('.source-flag');
+            flagSpan.addEventListener('click', function(e) {
+                e.stopPropagation();
+                showDomainTooltip(domain, e);
+            });
+
             return tr;
         }
 
