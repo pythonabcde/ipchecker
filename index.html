@@ -896,6 +896,9 @@ var _hmt = _hmt || [];
             }
         ];
 
+        console.log('=== SCRIPT LOADED ===');
+        console.log('IP Checkers configured:', ipCheckers.length);
+
         let successCount = 0;
         let failCount = 0;
         let totalCount = ipCheckers.length;
@@ -1649,6 +1652,9 @@ var _hmt = _hmt || [];
 
         // Initialize
         function init() {
+            console.log('=== IP CHECKER INITIALIZED ===');
+            console.log('Page loaded and init() called');
+
             const tbody = document.getElementById('checksTableBody');
 
             // Create all table rows
