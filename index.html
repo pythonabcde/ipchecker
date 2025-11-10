@@ -1217,6 +1217,8 @@ var _hmt = _hmt || [];
                         // Store country code for connectivity tests
                         if (parsed.countryCode) {
                             userCountryCode = parsed.countryCode.toUpperCase();
+                            // Test YouTube and Google if not China IP
+                            testBlockedSitesIfNeeded();
                         }
 
                         // Display country with flag image
@@ -1507,16 +1509,13 @@ var _hmt = _hmt || [];
                 grid.appendChild(createConnectivityItem(test));
             });
 
-            // Check if user is from China
-            const isChinaIP = userCountryCode === 'CN';
-
-            // Run tests
+            // Run tests (skip YouTube and Google initially, will test them after country is determined)
             for (const test of connectivityTests) {
                 const item = document.getElementById(`connectivity-${test.name.toLowerCase().replace(/\s+/g, '-').replace(/\./g, '-')}`);
                 const latencyDiv = item.querySelector('.connectivity-latency');
 
-                // Skip YouTube and Google tests for China IPs
-                if (isChinaIP && (test.name === 'YouTube' || test.name === 'Google')) {
+                // Skip YouTube and Google initially, will be tested after country check
+                if (test.name === 'YouTube' || test.name === 'Google') {
                     item.classList.remove('testing');
                     item.classList.add('skipped');
                     latencyDiv.classList.add('skipped');
@@ -1542,6 +1541,67 @@ var _hmt = _hmt || [];
                         indicatorClass = 'fair'; // Orange
                     } else {
                         indicatorClass = 'poor'; // Red
+                    }
+
+                    latencyDiv.innerHTML = `
+                        <span>${result.latency}ms</span>
+                        <span class="latency-indicator ${indicatorClass}"></span>
+                    `;
+                } else {
+                    item.classList.remove('testing');
+                    item.classList.add('failed');
+                    latencyDiv.classList.add('failed');
+                    latencyDiv.innerHTML = `
+                        <span>Failed</span>
+                        <span class="latency-indicator failed"></span>
+                    `;
+                }
+            }
+        }
+
+        // Test YouTube and Google connectivity (called after country is determined)
+        async function testBlockedSitesIfNeeded() {
+            // Only test if country code is available and NOT China
+            if (!userCountryCode || userCountryCode === 'CN') {
+                console.log('Skipping YouTube and Google tests (China IP or country not determined yet)');
+                return;
+            }
+
+            console.log(`Country is ${userCountryCode}, testing YouTube and Google`);
+
+            // Find YouTube and Google tests
+            const blockedSiteTests = connectivityTests.filter(test =>
+                test.name === 'YouTube' || test.name === 'Google'
+            );
+
+            for (const test of blockedSiteTests) {
+                const item = document.getElementById(`connectivity-${test.name.toLowerCase().replace(/\s+/g, '-').replace(/\./g, '-')}`);
+                const latencyDiv = item.querySelector('.connectivity-latency');
+
+                // Change to testing state
+                item.classList.remove('skipped');
+                item.classList.add('testing');
+                latencyDiv.classList.remove('skipped');
+                latencyDiv.innerHTML = `
+                    <span class="spinner"></span> Testing...
+                `;
+
+                const result = await testConnectivity(test);
+
+                if (result.success) {
+                    item.classList.remove('testing');
+                    item.classList.add('success');
+
+                    // Determine indicator color based on latency
+                    let indicatorClass = 'failed';
+                    if (result.latency < 100) {
+                        indicatorClass = 'excellent';
+                    } else if (result.latency < 200) {
+                        indicatorClass = 'good';
+                    } else if (result.latency < 400) {
+                        indicatorClass = 'fair';
+                    } else {
+                        indicatorClass = 'poor';
                     }
 
                     latencyDiv.innerHTML = `
