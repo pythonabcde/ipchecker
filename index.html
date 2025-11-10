@@ -1575,8 +1575,27 @@ var _hmt = _hmt || [];
             );
 
             for (const test of blockedSiteTests) {
-                const item = document.getElementById(`connectivity-${test.name.toLowerCase().replace(/\s+/g, '-').replace(/\./g, '-')}`);
+                const itemId = `connectivity-${test.name.toLowerCase().replace(/\s+/g, '-').replace(/\./g, '-')}`;
+                let item = document.getElementById(itemId);
+
+                // Wait for DOM element to be created if not exists yet
+                if (!item) {
+                    console.log(`Waiting for ${test.name} element to be created...`);
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    item = document.getElementById(itemId);
+                }
+
+                // If still not found, skip
+                if (!item) {
+                    console.log(`${test.name} element not found, skipping`);
+                    continue;
+                }
+
                 const latencyDiv = item.querySelector('.connectivity-latency');
+                if (!latencyDiv) {
+                    console.log(`${test.name} latencyDiv not found, skipping`);
+                    continue;
+                }
 
                 // Change to testing state
                 item.classList.remove('skipped');
