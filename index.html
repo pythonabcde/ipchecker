@@ -857,6 +857,8 @@ var _hmt = _hmt || [];
         let userCountryCode = null; // Store user's country code
         let locationCache = {}; // Cache for location data
         let locationDataCache = {}; // Cache for detailed location data (ISP, ASN, etc.)
+        let ipCheckResults = {}; // Store IP check results: { ip: [checkerName1, checkerName2, ...] }
+        let allChecksComplete = false; // Flag to track if all IP checks are complete
 
         // Extract domain from URL
         function extractDomain(url) {
@@ -1033,6 +1035,69 @@ var _hmt = _hmt || [];
             return { location: '-', isp: '', asn: '' };
         }
 
+        // Batch query locations for all unique IPs
+        async function batchQueryLocations() {
+            if (allChecksComplete) return; // Prevent duplicate calls
+            allChecksComplete = true;
+
+            console.log('All IP checks complete. Starting batch location query...');
+            console.log(`Found ${Object.keys(ipCheckResults).length} unique IP(s) from ${totalCount} sources`);
+
+            // For each unique IP
+            for (const [ip, data] of Object.entries(ipCheckResults)) {
+                // If this IP already has location data from source (like ip.sb-geoip), use it
+                let locationData = data.locationData;
+
+                // Determine if we need to query API
+                const needsLocation = !locationData || !locationData.location;
+                const needsISP = !locationData || !locationData.isp;
+                const needsASN = !locationData || !locationData.asn;
+
+                let apiLocationData = { location: '', isp: '', asn: '' };
+
+                // Only query API if at least one field is missing
+                if (needsLocation || needsISP || needsASN) {
+                    console.log(`Querying location for IP: ${ip} (used by ${data.checkers.length} source(s))`);
+                    apiLocationData = await getIPLocation(ip);
+                }
+
+                // Merge data: prioritize source data for each field individually
+                const finalLocationData = {
+                    location: (locationData && locationData.location) || apiLocationData.location || '-',
+                    isp: (locationData && locationData.isp) || apiLocationData.isp || '',
+                    asn: (locationData && locationData.asn) || apiLocationData.asn || ''
+                };
+
+                // Update all rows that use this IP
+                data.checkers.forEach(checkerName => {
+                    const row = document.getElementById(`row-${checkerName}`);
+                    if (row) {
+                        const locationCell = row.cells[2];
+
+                        // Format and display location info
+                        let locationHTML = '';
+                        if (finalLocationData.location && finalLocationData.location !== '-') {
+                            locationHTML += `<div style="margin-bottom: 3px;"><strong>Location:</strong> ${finalLocationData.location}</div>`;
+                        }
+                        if (finalLocationData.isp) {
+                            locationHTML += `<div style="margin-bottom: 3px;"><strong>ISP:</strong> ${finalLocationData.isp}</div>`;
+                        }
+                        if (finalLocationData.asn) {
+                            locationHTML += `<div><strong>ASN:</strong> ${finalLocationData.asn}</div>`;
+                        }
+
+                        if (!locationHTML) {
+                            locationHTML = '<span>-</span>';
+                        }
+
+                        locationCell.innerHTML = locationHTML;
+                    }
+                });
+            }
+
+            console.log('Batch location query complete!');
+        }
+
         // Update statistics
         function updateStats() {
             successCount;
@@ -1047,6 +1112,13 @@ var _hmt = _hmt || [];
 
                 // Update IP summary card
                 updateIPSummary(mostCommonIP);
+            }
+
+            // Check if all IP checks are complete
+            if (successCount + failCount === totalCount && !allChecksComplete) {
+                console.log(`All ${totalCount} IP checks complete (${successCount} success, ${failCount} failed)`);
+                // Trigger batch location query
+                batchQueryLocations();
             }
         }
 
@@ -1321,45 +1393,22 @@ var _hmt = _hmt || [];
                     row.className = 'success';
                     ipCell.innerHTML = `<div class="status-success">${ip}</div>`;
 
-                    // Check if we need to query geolocation API
+                    // Store IP and checker mapping for batch location query later
+                    if (!ipCheckResults[ip]) {
+                        ipCheckResults[ip] = { checkers: [], locationData: null };
+                    }
+                    ipCheckResults[ip].checkers.push(checker.name);
+
+                    // If this source already has location data (like ip.sb-geoip), store it
+                    if (locationData && (locationData.location || locationData.isp || locationData.asn)) {
+                        // Only update if we don't have location data yet, or this has more complete data
+                        if (!ipCheckResults[ip].locationData) {
+                            ipCheckResults[ip].locationData = locationData;
+                        }
+                    }
+
+                    // Show loading state
                     locationCell.innerHTML = '<span class="status-loading">Loading...</span>';
-
-                    // Determine which fields are missing from source
-                    const needsLocation = !locationData || !locationData.location;
-                    const needsISP = !locationData || !locationData.isp;
-                    const needsASN = !locationData || !locationData.asn;
-
-                    let apiLocationData = { location: '', isp: '', asn: '' };
-
-                    // Only query API if at least one field is missing
-                    if (needsLocation || needsISP || needsASN) {
-                        apiLocationData = await getIPLocation(ip);
-                    }
-
-                    // Merge data: prioritize source data for each field individually
-                    const finalLocationData = {
-                        location: (locationData && locationData.location) || apiLocationData.location || '-',
-                        isp: (locationData && locationData.isp) || apiLocationData.isp || '',
-                        asn: (locationData && locationData.asn) || apiLocationData.asn || ''
-                    };
-
-                    // Format and display location info
-                    let locationHTML = '';
-                    if (finalLocationData.location && finalLocationData.location !== '-') {
-                        locationHTML += `<div style="margin-bottom: 3px;"><strong>Location:</strong> ${finalLocationData.location}</div>`;
-                    }
-                    if (finalLocationData.isp) {
-                        locationHTML += `<div style="margin-bottom: 3px;"><strong>ISP:</strong> ${finalLocationData.isp}</div>`;
-                    }
-                    if (finalLocationData.asn) {
-                        locationHTML += `<div><strong>ASN:</strong> ${finalLocationData.asn}</div>`;
-                    }
-
-                    if (!locationHTML) {
-                        locationHTML = '<span>-</span>';
-                    }
-
-                    locationCell.innerHTML = locationHTML;
                 } else {
                     throw new Error('Invalid IP format');
                 }
