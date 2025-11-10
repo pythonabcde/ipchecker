@@ -1578,16 +1578,18 @@ var _hmt = _hmt || [];
                 const itemId = `connectivity-${test.name.toLowerCase().replace(/\s+/g, '-').replace(/\./g, '-')}`;
                 let item = document.getElementById(itemId);
 
-                // Wait for DOM element to be created if not exists yet
-                if (!item) {
-                    console.log(`Waiting for ${test.name} element to be created...`);
-                    await new Promise(resolve => setTimeout(resolve, 500));
+                // Wait for DOM element to be created if not exists yet (try up to 5 times with 1 second intervals)
+                let attempts = 0;
+                while (!item && attempts < 5) {
+                    console.log(`Waiting for ${test.name} element to be created... (attempt ${attempts + 1}/5)`);
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                     item = document.getElementById(itemId);
+                    attempts++;
                 }
 
                 // If still not found, skip
                 if (!item) {
-                    console.log(`${test.name} element not found, skipping`);
+                    console.log(`${test.name} element not found after ${attempts} attempts, skipping`);
                     continue;
                 }
 
@@ -1596,6 +1598,8 @@ var _hmt = _hmt || [];
                     console.log(`${test.name} latencyDiv not found, skipping`);
                     continue;
                 }
+
+                console.log(`Starting test for ${test.name}...`);
 
                 // Change to testing state
                 item.classList.remove('skipped');
