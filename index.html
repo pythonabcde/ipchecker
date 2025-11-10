@@ -1847,6 +1847,58 @@ var _hmt = _hmt || [];
                     `;
                 }
             }
+
+            // Start periodic check for YouTube/Google tests
+            startPeriodicYouTubeGoogleCheck();
+        }
+
+        // Periodically check if we should start YouTube/Google tests
+        function startPeriodicYouTubeGoogleCheck() {
+            let checkCount = 0;
+            const maxChecks = 30; // Check for 30 seconds max
+
+            const intervalId = setInterval(() => {
+                checkCount++;
+
+                // Stop checking after 30 attempts
+                if (checkCount > maxChecks) {
+                    clearInterval(intervalId);
+                    return;
+                }
+
+                // If tests already started, stop checking
+                if (blockedSitesTestStarted) {
+                    clearInterval(intervalId);
+                    return;
+                }
+
+                // Check if country is displayed in the summary
+                const summaryCountryEl = document.getElementById('summaryCountry');
+                if (!summaryCountryEl) return;
+
+                const countryText = summaryCountryEl.textContent || summaryCountryEl.innerText;
+
+                // If country is empty or still loading, continue checking
+                if (!countryText || countryText === '-' || countryText.includes('...')) {
+                    return;
+                }
+
+                // If country contains "China" or "中国", skip YouTube/Google tests
+                if (countryText.includes('China') || countryText.includes('中国') || countryText.includes('CN)')) {
+                    clearInterval(intervalId);
+                    return;
+                }
+
+                // Country is non-China, start tests
+                clearInterval(intervalId);
+
+                // Set a dummy country code to pass the check
+                if (!userCountryCode) {
+                    userCountryCode = 'US'; // Set to US or any non-CN code
+                }
+
+                testBlockedSitesIfNeeded();
+            }, 1000); // Check every second
         }
 
         // Test YouTube and Google connectivity (called after country is determined)
