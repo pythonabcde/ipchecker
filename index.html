@@ -1066,22 +1066,58 @@ var _hmt = _hmt || [];
             const uniqueIPRows = [];
             const duplicateIPRows = [];
 
+            // Helper function to get country from checker name
+            const getCheckerCountry = (checkerName) => {
+                const checker = ipCheckers.find(c => c.name === checkerName);
+                return checker ? checker.country : '';
+            };
+
             // For each unique IP, take the first checker as representative
+            const uniqueIPData = [];
             for (const [ip, checkers] of Object.entries(ipGroups)) {
                 const firstChecker = checkers[0];
+                const country = getCheckerCountry(firstChecker);
                 const row = document.getElementById(`row-${firstChecker}`);
                 if (row) {
-                    uniqueIPRows.push(row);
+                    uniqueIPData.push({ ip, row, country, isCN: country === 'CN' });
                 }
 
                 // All other checkers with this IP go to duplicates
                 for (let i = 1; i < checkers.length; i++) {
-                    const duplicateRow = document.getElementById(`row-${checkers[i]}`);
+                    const duplicateChecker = checkers[i];
+                    const duplicateCountry = getCheckerCountry(duplicateChecker);
+                    const duplicateRow = document.getElementById(`row-${duplicateChecker}`);
                     if (duplicateRow) {
-                        duplicateIPRows.push(duplicateRow);
+                        duplicateIPRows.push({
+                            ip,
+                            row: duplicateRow,
+                            country: duplicateCountry,
+                            checkerName: duplicateChecker
+                        });
                     }
                 }
             }
+
+            // Sort unique IPs: China first, then others
+            uniqueIPData.sort((a, b) => {
+                if (a.isCN && !b.isCN) return -1;
+                if (!a.isCN && b.isCN) return 1;
+                return 0;
+            });
+            uniqueIPRows.push(...uniqueIPData.map(data => data.row));
+
+            // Sort duplicate IPs: group by IP, then by country within each IP group
+            duplicateIPRows.sort((a, b) => {
+                // First sort by IP
+                if (a.ip !== b.ip) {
+                    return a.ip.localeCompare(b.ip);
+                }
+                // Within same IP, sort by country (CN first)
+                if (a.country === 'CN' && b.country !== 'CN') return -1;
+                if (a.country !== 'CN' && b.country === 'CN') return 1;
+                // Then alphabetically by country
+                return a.country.localeCompare(b.country);
+            });
 
             // Clear tbody
             tbody.innerHTML = '';
@@ -1103,10 +1139,10 @@ var _hmt = _hmt || [];
                 tbody.appendChild(dividerRow);
 
                 // Add duplicate IP rows
-                duplicateIPRows.forEach(row => tbody.appendChild(row));
+                duplicateIPRows.forEach(data => tbody.appendChild(data.row));
             }
 
-            console.log(`Table reordered: ${uniqueIPRows.length} unique, ${duplicateIPRows.length} duplicates`);
+            console.log(`Table reordered: ${uniqueIPRows.length} unique (CN first), ${duplicateIPRows.length} duplicates (grouped by IP and country)`);
         }
 
         // Batch query locations for all unique IPs
