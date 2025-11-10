@@ -1866,10 +1866,26 @@ var _hmt = _hmt || [];
                     return;
                 }
 
-                // If tests already started, stop checking
+                // If tests already started, stop checking immediately
                 if (blockedSitesTestStarted) {
                     clearInterval(intervalId);
                     return;
+                }
+
+                // Check if YouTube/Google elements are no longer in "skipped" state
+                // This means tests are running or completed
+                const youtubeItem = document.getElementById('connectivity-youtube');
+                const googleItem = document.getElementById('connectivity-google');
+
+                if (youtubeItem && googleItem) {
+                    const youtubeSkipped = youtubeItem.classList.contains('skipped');
+                    const googleSkipped = googleItem.classList.contains('skipped');
+
+                    // If either is not skipped, tests have started
+                    if (!youtubeSkipped || !googleSkipped) {
+                        clearInterval(intervalId);
+                        return;
+                    }
                 }
 
                 // Check if country is displayed in the summary
