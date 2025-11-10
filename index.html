@@ -750,18 +750,6 @@ var _hmt = _hmt || [];
                 parser: data => data.trim(),
                 isText: true
             },
-            {
-                name: 'checkip.synology',
-                flag: '🌍',
-                country: 'TW',
-                url: 'https://checkip.synology.com/',
-                parser: data => {
-                    // Synology returns "Current IP Address: x.x.x.x"
-                    const match = data.match(/Current IP Address:\s*(\S+)/i);
-                    return match ? match[1].trim() : data.trim();
-                },
-                isText: true
-            },
             // Chinese sources
             {
                 name: 'ip.sb',
