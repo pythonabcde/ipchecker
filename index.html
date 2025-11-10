@@ -1905,47 +1905,40 @@ var _hmt = _hmt || [];
         async function testBlockedSitesIfNeeded() {
             // Only test if country code is available and NOT China
             if (!userCountryCode) {
-                console.log('Skipping YouTube and Google tests - country not determined yet');
                 return;
             }
 
             if (userCountryCode === 'CN') {
-                console.log('Skipping YouTube and Google tests - China IP detected');
                 return;
             }
 
             // Prevent duplicate calls
             if (blockedSitesTestStarted) {
-                console.log('YouTube and Google tests already started, skipping duplicate call');
                 return;
             }
 
             // Mark as started to prevent duplicate calls
             blockedSitesTestStarted = true;
-            console.log(`Country is ${userCountryCode}, starting YouTube and Google tests`);
 
             // Find YouTube and Google tests
             const blockedSiteTests = connectivityTests.filter(test =>
                 test.name === 'YouTube' || test.name === 'Google'
             );
 
-            for (const test of blockedSiteTests) {
+            // Test YouTube and Google in parallel (not sequentially)
+            const testPromises = blockedSiteTests.map(async (test) => {
                 const itemId = `connectivity-${test.name.toLowerCase().replace(/\s+/g, '-').replace(/\./g, '-')}`;
                 const item = document.getElementById(itemId);
 
                 // If element not found, skip
                 if (!item) {
-                    console.log(`${test.name} element not found, skipping`);
-                    continue;
+                    return;
                 }
 
                 const latencyDiv = item.querySelector('.connectivity-latency');
                 if (!latencyDiv) {
-                    console.log(`${test.name} latencyDiv not found, skipping`);
-                    continue;
+                    return;
                 }
-
-                console.log(`Starting test for ${test.name}...`);
 
                 // Change to testing state
                 item.classList.remove('skipped');
@@ -1986,7 +1979,10 @@ var _hmt = _hmt || [];
                         <span class="latency-indicator failed"></span>
                     `;
                 }
-            }
+            });
+
+            // Wait for all tests to complete
+            await Promise.all(testPromises);
         }
 
         // Get DNS server geolocation information
