@@ -906,6 +906,7 @@ var _hmt = _hmt || [];
         let locationDataCache = {}; // Cache for detailed location data (ISP, ASN, etc.)
         let ipCheckResults = {}; // Store IP check results: { ip: [checkerName1, checkerName2, ...] }
         let allChecksComplete = false; // Flag to track if all IP checks are complete
+        let blockedSitesTestStarted = false; // Flag to prevent duplicate YouTube/Google tests
 
         // Extract domain from URL
         function extractDomain(url) {
@@ -1261,6 +1262,12 @@ var _hmt = _hmt || [];
                 // Store country_code in ipCheckResults for sorting
                 ipCheckResults[ip].country_code = finalLocationData.country_code;
 
+                // Set userCountryCode from the most common IP (for connectivity tests)
+                if (!userCountryCode && ip === mostCommonIP && finalLocationData.country_code) {
+                    userCountryCode = finalLocationData.country_code;
+                    console.log(`Set userCountryCode to ${userCountryCode} from most common IP`);
+                }
+
                 // Update all rows that use this IP
                 data.checkers.forEach(checkerName => {
                     const row = document.getElementById(`row-${checkerName}`);
@@ -1292,6 +1299,9 @@ var _hmt = _hmt || [];
 
             // Reorder table to show unique IPs first
             reorderTableRows();
+
+            // Test YouTube and Google if needed (now that we have country code)
+            testBlockedSitesIfNeeded();
         }
 
         // Update statistics
@@ -1817,12 +1827,20 @@ var _hmt = _hmt || [];
 
         // Test YouTube and Google connectivity (called after country is determined)
         async function testBlockedSitesIfNeeded() {
+            // Prevent duplicate calls
+            if (blockedSitesTestStarted) {
+                console.log('YouTube and Google tests already started, skipping duplicate call');
+                return;
+            }
+
             // Only test if country code is available and NOT China
             if (!userCountryCode || userCountryCode === 'CN') {
                 console.log('Skipping YouTube and Google tests (China IP or country not determined yet)');
                 return;
             }
 
+            // Mark as started to prevent duplicate calls
+            blockedSitesTestStarted = true;
             console.log(`Country is ${userCountryCode}, testing YouTube and Google`);
 
             // Find YouTube and Google tests
@@ -1832,20 +1850,11 @@ var _hmt = _hmt || [];
 
             for (const test of blockedSiteTests) {
                 const itemId = `connectivity-${test.name.toLowerCase().replace(/\s+/g, '-').replace(/\./g, '-')}`;
-                let item = document.getElementById(itemId);
+                const item = document.getElementById(itemId);
 
-                // Wait for DOM element to be created if not exists yet (try up to 5 times with 1 second intervals)
-                let attempts = 0;
-                while (!item && attempts < 5) {
-                    console.log(`Waiting for ${test.name} element to be created... (attempt ${attempts + 1}/5)`);
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                    item = document.getElementById(itemId);
-                    attempts++;
-                }
-
-                // If still not found, skip
+                // If element not found, skip
                 if (!item) {
-                    console.log(`${test.name} element not found after ${attempts} attempts, skipping`);
+                    console.log(`${test.name} element not found, skipping`);
                     continue;
                 }
 
