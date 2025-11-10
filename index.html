@@ -995,30 +995,41 @@ var _hmt = _hmt || [];
                 }
             ];
 
+            // Try each service with retry mechanism
             for (const service of geoServices) {
-                try {
-                    const controller = new AbortController();
-                    const timeout = setTimeout(() => controller.abort(), 5000);
+                // Try up to 2 times per service
+                for (let attempt = 1; attempt <= 2; attempt++) {
+                    try {
+                        const controller = new AbortController();
+                        const timeout = setTimeout(() => controller.abort(), 8000); // Increased to 8 seconds
 
-                    const response = await fetch(service.url, {
-                        signal: controller.signal
-                    });
-                    clearTimeout(timeout);
+                        const response = await fetch(service.url, {
+                            signal: controller.signal
+                        });
+                        clearTimeout(timeout);
 
-                    if (response.ok) {
-                        const data = await response.json();
-                        const locationData = service.parser(data);
-                        if (locationData && locationData.location) {
-                            locationDataCache[ip] = locationData;
-                            return locationData;
+                        if (response.ok) {
+                            const data = await response.json();
+                            const locationData = service.parser(data);
+                            if (locationData && locationData.location) {
+                                console.log(`Got location from ${service.name} for ${ip} (attempt ${attempt})`);
+                                locationDataCache[ip] = locationData;
+                                return locationData;
+                            }
                         }
+                    } catch (error) {
+                        console.log(`${service.name} attempt ${attempt} failed for ${ip}:`, error.message);
+                        if (attempt === 2) {
+                            // Only move to next service after 2 attempts
+                            continue;
+                        }
+                        // Wait 1 second before retry
+                        await new Promise(resolve => setTimeout(resolve, 1000));
                     }
-                } catch (error) {
-                    // Try next service
-                    continue;
                 }
             }
 
+            console.log(`All geolocation APIs failed for ${ip}`);
             return { location: '-', isp: '', asn: '' };
         }
 
