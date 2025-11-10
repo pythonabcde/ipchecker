@@ -818,6 +818,13 @@ var _hmt = _hmt || [];
                 parser: data => data.trim(),
                 isText: true
             },
+            {
+                name: 'ipify',
+                flag: '🌍',
+                country: 'US',
+                url: 'https://api.ipify.org?format=json',
+                parser: data => data.ip
+            },
             // Chinese sources
             {
                 name: 'ip.sb',
