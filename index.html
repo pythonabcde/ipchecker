@@ -173,6 +173,20 @@
             background-color: #fff5f5;
         }
 
+        tbody tr.divider {
+            background: #f7fafc;
+            border-top: 3px solid #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        tbody tr.divider td {
+            padding: 8px;
+            text-align: center;
+            font-weight: 600;
+            color: #667eea;
+            font-size: 0.9rem;
+        }
+
         td {
             padding: 12px 10px;
             vertical-align: middle;
@@ -1035,6 +1049,66 @@ var _hmt = _hmt || [];
             return { location: '-', isp: '', asn: '' };
         }
 
+        // Reorder table rows to show unique IPs first
+        function reorderTableRows() {
+            const tbody = document.getElementById('checksTableBody');
+            const uniqueIPCount = Object.keys(ipCheckResults).length;
+
+            console.log(`Reordering table: ${uniqueIPCount} unique IP(s) detected`);
+
+            // Group checkers by IP
+            const ipGroups = {};
+            for (const [ip, data] of Object.entries(ipCheckResults)) {
+                ipGroups[ip] = data.checkers;
+            }
+
+            // Create arrays for unique IP rows and duplicate IP rows
+            const uniqueIPRows = [];
+            const duplicateIPRows = [];
+
+            // For each unique IP, take the first checker as representative
+            for (const [ip, checkers] of Object.entries(ipGroups)) {
+                const firstChecker = checkers[0];
+                const row = document.getElementById(`row-${firstChecker}`);
+                if (row) {
+                    uniqueIPRows.push(row);
+                }
+
+                // All other checkers with this IP go to duplicates
+                for (let i = 1; i < checkers.length; i++) {
+                    const duplicateRow = document.getElementById(`row-${checkers[i]}`);
+                    if (duplicateRow) {
+                        duplicateIPRows.push(duplicateRow);
+                    }
+                }
+            }
+
+            // Clear tbody
+            tbody.innerHTML = '';
+
+            // Add unique IP rows first
+            uniqueIPRows.forEach(row => tbody.appendChild(row));
+
+            // Add divider row if there are duplicates
+            if (duplicateIPRows.length > 0) {
+                const dividerRow = document.createElement('tr');
+                dividerRow.className = 'divider';
+                dividerRow.innerHTML = `
+                    <td colspan="3">
+                        ↑ ${uniqueIPCount} Unique IP${uniqueIPCount > 1 ? 's' : ''} ↑
+                        &nbsp;&nbsp;|&nbsp;&nbsp;
+                        ↓ ${duplicateIPRows.length} Duplicate Detection${duplicateIPRows.length > 1 ? 's' : ''} ↓
+                    </td>
+                `;
+                tbody.appendChild(dividerRow);
+
+                // Add duplicate IP rows
+                duplicateIPRows.forEach(row => tbody.appendChild(row));
+            }
+
+            console.log(`Table reordered: ${uniqueIPRows.length} unique, ${duplicateIPRows.length} duplicates`);
+        }
+
         // Batch query locations for all unique IPs
         async function batchQueryLocations() {
             if (allChecksComplete) return; // Prevent duplicate calls
@@ -1096,6 +1170,9 @@ var _hmt = _hmt || [];
             }
 
             console.log('Batch location query complete!');
+
+            // Reorder table to show unique IPs first
+            reorderTableRows();
         }
 
         // Update statistics
