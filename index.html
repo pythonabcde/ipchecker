@@ -843,7 +843,8 @@ var _hmt = _hmt || [];
                     ip: data.ip,
                     location: data.country && data.city ? `${data.country} ${data.region || ''} ${data.city}`.trim() : null,
                     isp: data.isp || data.organization || '',
-                    asn: data.asn || ''
+                    asn: data.asn || '',
+                    country_code: data.country_code || ''
                 }),
                 hasLocation: true
             },
@@ -964,7 +965,8 @@ var _hmt = _hmt || [];
                             const result = {
                                 location: `${data.country} ${data.region || ''} ${data.city || ''}`.trim(),
                                 isp: data.connection?.isp || data.connection?.org || '',
-                                asn: data.connection?.asn ? `AS${data.connection.asn}` + (data.connection.org ? ` ${data.connection.org}` : '') : ''
+                                asn: data.connection?.asn ? `AS${data.connection.asn}` + (data.connection.org ? ` ${data.connection.org}` : '') : '',
+                                country_code: data.country_code || ''
                             };
                             return result;
                         }
@@ -979,7 +981,8 @@ var _hmt = _hmt || [];
                             const result = {
                                 location: `${data.country_name || ''} ${data.region || ''} ${data.city || ''}`.trim(),
                                 isp: data.org || '',
-                                asn: data.asn || ''
+                                asn: data.asn || '',
+                                country_code: data.country_code || ''
                             };
                             return result;
                         }
@@ -994,7 +997,8 @@ var _hmt = _hmt || [];
                             const result = {
                                 location: `${data.countryName} ${data.regionName || ''} ${data.cityName || ''}`.trim(),
                                 isp: data.isp || '',
-                                asn: data.asn ? `AS${data.asn}` : ''
+                                asn: data.asn ? `AS${data.asn}` : '',
+                                country_code: data.countryCode || ''
                             };
                             return result;
                         }
@@ -1009,7 +1013,8 @@ var _hmt = _hmt || [];
                             const result = {
                                 location: `${data.country} ${data.region || ''} ${data.city}`.trim(),
                                 isp: data.organization || '',
-                                asn: data.asn || ''
+                                asn: data.asn || '',
+                                country_code: data.country_code || ''
                             };
                             return result;
                         }
@@ -1053,7 +1058,7 @@ var _hmt = _hmt || [];
             }
 
             console.log(`All geolocation APIs failed for ${ip}`);
-            return { location: '-', isp: '', asn: '' };
+            return { location: '-', isp: '', asn: '', country_code: '' };
         }
 
         // Reorder table rows to show unique IPs first
@@ -1080,37 +1085,34 @@ var _hmt = _hmt || [];
             };
 
             // For each unique IP, take the first checker as representative
-            // Prioritize CN checkers if available
             const uniqueIPData = [];
-            for (const [ip, checkers] of Object.entries(ipGroups)) {
-                // Find a CN checker first, otherwise use the first one
-                let representativeChecker = checkers[0];
-                for (const checker of checkers) {
-                    if (getCheckerCountry(checker) === 'CN') {
-                        representativeChecker = checker;
-                        break;
-                    }
-                }
+            for (const [ip, data] of Object.entries(ipCheckResults)) {
+                const checkers = data.checkers;
+                const representativeChecker = checkers[0];
 
-                const country = getCheckerCountry(representativeChecker);
+                // Get IP's actual country code (from geolocation API)
+                const ipCountryCode = data.country_code || '';
                 const row = document.getElementById(`row-${representativeChecker}`);
                 if (row) {
-                    uniqueIPData.push({ ip, row, country, isCN: country === 'CN' });
+                    uniqueIPData.push({
+                        ip,
+                        row,
+                        country_code: ipCountryCode,
+                        isCN: ipCountryCode === 'CN'
+                    });
                 }
 
-                // All other checkers with this IP go to duplicates (except the representative)
-                for (const checker of checkers) {
-                    if (checker !== representativeChecker) {
-                        const duplicateCountry = getCheckerCountry(checker);
-                        const duplicateRow = document.getElementById(`row-${checker}`);
-                        if (duplicateRow) {
-                            duplicateIPRows.push({
-                                ip,
-                                row: duplicateRow,
-                                country: duplicateCountry,
-                                checkerName: checker
-                            });
-                        }
+                // All other checkers with this IP go to duplicates
+                for (let i = 1; i < checkers.length; i++) {
+                    const checker = checkers[i];
+                    const duplicateRow = document.getElementById(`row-${checker}`);
+                    if (duplicateRow) {
+                        duplicateIPRows.push({
+                            ip,
+                            row: duplicateRow,
+                            country_code: ipCountryCode,
+                            checkerName: checker
+                        });
                     }
                 }
             }
@@ -1123,17 +1125,16 @@ var _hmt = _hmt || [];
             });
             uniqueIPRows.push(...uniqueIPData.map(data => data.row));
 
-            // Sort duplicate IPs: group by IP, then by country within each IP group
+            // Sort duplicate IPs: group by IP (CN IPs first, then others)
             duplicateIPRows.sort((a, b) => {
-                // First sort by IP
-                if (a.ip !== b.ip) {
-                    return a.ip.localeCompare(b.ip);
-                }
-                // Within same IP, sort by country (CN first)
-                if (a.country === 'CN' && b.country !== 'CN') return -1;
-                if (a.country !== 'CN' && b.country === 'CN') return 1;
-                // Then alphabetically by country
-                return a.country.localeCompare(b.country);
+                // First, sort by IP country (CN first)
+                const aIsCN = a.country_code === 'CN';
+                const bIsCN = b.country_code === 'CN';
+                if (aIsCN && !bIsCN) return -1;
+                if (!aIsCN && bIsCN) return 1;
+
+                // Then sort by IP address
+                return a.ip.localeCompare(b.ip);
             });
 
             // Clear tbody
@@ -1180,7 +1181,7 @@ var _hmt = _hmt || [];
                 const needsISP = !locationData || !locationData.isp;
                 const needsASN = !locationData || !locationData.asn;
 
-                let apiLocationData = { location: '', isp: '', asn: '' };
+                let apiLocationData = { location: '', isp: '', asn: '', country_code: '' };
 
                 // Only query API if at least one field is missing
                 if (needsLocation || needsISP || needsASN) {
@@ -1192,8 +1193,12 @@ var _hmt = _hmt || [];
                 const finalLocationData = {
                     location: (locationData && locationData.location) || apiLocationData.location || '-',
                     isp: (locationData && locationData.isp) || apiLocationData.isp || '',
-                    asn: (locationData && locationData.asn) || apiLocationData.asn || ''
+                    asn: (locationData && locationData.asn) || apiLocationData.asn || '',
+                    country_code: (locationData && locationData.country_code) || apiLocationData.country_code || ''
                 };
+
+                // Store country_code in ipCheckResults for sorting
+                ipCheckResults[ip].country_code = finalLocationData.country_code;
 
                 // Update all rows that use this IP
                 data.checkers.forEach(checkerName => {
