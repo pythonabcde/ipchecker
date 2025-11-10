@@ -1266,6 +1266,8 @@ var _hmt = _hmt || [];
                     country_code: (locationData && locationData.country_code) || apiLocationData.country_code || ''
                 };
 
+                console.log(`[batchQueryLocations] IP ${ip} - country_code: ${finalLocationData.country_code}, isMostCommon: ${ip === mostCommonIP}`);
+
                 // Store country_code in ipCheckResults for sorting
                 ipCheckResults[ip].country_code = finalLocationData.country_code;
 
@@ -1273,9 +1275,11 @@ var _hmt = _hmt || [];
                 // Trigger test immediately once we have the country code for mostCommonIP
                 if (!userCountryCode && ip === mostCommonIP && finalLocationData.country_code) {
                     userCountryCode = finalLocationData.country_code;
-                    console.log(`Set userCountryCode to ${userCountryCode} from most common IP`);
+                    console.log(`[batchQueryLocations] Set userCountryCode to ${userCountryCode} from most common IP`);
                     // Test YouTube and Google immediately if needed
                     testBlockedSitesIfNeeded();
+                } else if (ip === mostCommonIP) {
+                    console.log(`[batchQueryLocations] mostCommonIP detected but not setting userCountryCode: userCountryCode=${userCountryCode}, country_code=${finalLocationData.country_code}`);
                 }
 
                 // Update all rows that use this IP
@@ -1366,6 +1370,8 @@ var _hmt = _hmt || [];
         // Update IP summary card with detailed information
         async function updateIPSummary(ip) {
             if (!ip) return;
+
+            console.log(`[updateIPSummary] Called with IP: ${ip}`);
 
             // Update IP immediately
             const summaryIPEl = document.getElementById('summaryIP');
@@ -1501,21 +1507,25 @@ var _hmt = _hmt || [];
             // Try each API until we get valid data
             for (const api of apis) {
                 try {
+                    console.log(`[updateIPSummary] Trying API: ${api.name}`);
                     const data = await api.fetch();
                     const parsed = api.parse(data);
 
                     if (parsed) {
-                        console.log(`Successfully got IP info from ${api.name}`);
+                        console.log(`[updateIPSummary] Successfully got IP info from ${api.name}`, parsed);
 
                         updateField('summaryISP', parsed.isp);
                         updateField('summaryASN', parsed.asn);
 
                         // Store country code for connectivity tests
+                        console.log(`[updateIPSummary] parsed.countryCode = ${parsed.countryCode}`);
                         if (parsed.countryCode) {
                             userCountryCode = parsed.countryCode.toUpperCase();
-                            console.log(`updateIPSummary: set userCountryCode to ${userCountryCode}`);
+                            console.log(`[updateIPSummary] Set userCountryCode to ${userCountryCode}`);
                             // Test YouTube and Google if not China IP
                             testBlockedSitesIfNeeded();
+                        } else {
+                            console.log(`[updateIPSummary] WARNING: parsed.countryCode is empty!`);
                         }
 
                         // Display country with flag image
