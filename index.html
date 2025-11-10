@@ -186,6 +186,12 @@
         .source-flag {
             font-size: 1.2rem;
             margin-right: 5px;
+            cursor: help;
+            transition: transform 0.2s;
+        }
+
+        .source-flag:hover {
+            transform: scale(1.2);
         }
 
         .ip-cell {
@@ -753,7 +759,7 @@ var _hmt = _hmt || [];
             // Chinese sources
             {
                 name: 'ip.sb',
-                flag: '🇨🇳',
+                flag: '🌍',
                 country: 'CN',
                 url: 'https://api.ip.sb/ip',
                 parser: data => data.trim(),
@@ -761,7 +767,7 @@ var _hmt = _hmt || [];
             },
             {
                 name: 'ip.sb-geoip',
-                flag: '🇨🇳',
+                flag: '🌍',
                 country: 'CN',
                 url: 'https://api.ip.sb/geoip',
                 parser: data => ({
@@ -774,21 +780,21 @@ var _hmt = _hmt || [];
             },
             {
                 name: 'myip.ipip.net',
-                flag: '🇨🇳',
+                flag: '🌍',
                 country: 'CN',
                 url: 'https://myip.ipip.net/json',
                 parser: data => data.data?.ip || data.data?.IP
             },
             {
                 name: 'myip.la',
-                flag: '🇨🇳',
+                flag: '🌍',
                 country: 'CN',
                 url: 'https://api.myip.la/en?json',
                 parser: data => data.ip
             },
             {
                 name: 'cz88.net',
-                flag: '🇨🇳',
+                flag: '🌍',
                 country: 'CN',
                 url: 'https://www.cz88.net/api/cz88/ip/base?ip=',
                 parser: data => data.data?.ip
@@ -803,13 +809,24 @@ var _hmt = _hmt || [];
         let locationCache = {}; // Cache for location data
         let locationDataCache = {}; // Cache for detailed location data (ISP, ASN, etc.)
 
+        // Extract domain from URL
+        function extractDomain(url) {
+            try {
+                const urlObj = new URL(url);
+                return urlObj.hostname;
+            } catch (e) {
+                return url;
+            }
+        }
+
         // Create table row
         function createTableRow(checker) {
             const tr = document.createElement('tr');
             tr.id = `row-${checker.name}`;
+            const domain = extractDomain(checker.url);
             tr.innerHTML = `
                 <td class="source-cell">
-                    <span class="source-flag">${checker.flag}</span>
+                    <span class="source-flag" title="${domain}">${checker.flag}</span>
                     ${checker.name}
                 </td>
                 <td class="ip-cell">
