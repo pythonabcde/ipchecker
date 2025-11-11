@@ -1778,7 +1778,7 @@ var _hmt = _hmt || [];
 
             // Different initial content for YouTube/Google vs others
             const latencyContent = isBlockedSite
-                ? '<span>Not tested (CHINA)</span>'
+                ? '<span>Not tested</span>'
                 : '<span class="spinner"></span> Testing...';
 
             const latencyClass = isBlockedSite ? 'connectivity-latency skipped' : 'connectivity-latency';
@@ -1827,7 +1827,7 @@ var _hmt = _hmt || [];
                     latencyDiv.classList.remove('testing');
                     latencyDiv.classList.add('skipped');
                     latencyDiv.innerHTML = `
-                        <span>Not tested (CHINA)</span>
+                        <span>Not tested</span>
                     `;
                     continue;
                 }
@@ -1915,9 +1915,28 @@ var _hmt = _hmt || [];
                     return;
                 }
 
-                // If country is China, stop checking and never test
+                // If country is China, update text and stop checking
                 if (userCountryCode === 'CN') {
                     clearInterval(intervalId);
+
+                    // Update YouTube and Google to show "Not tested (CHINA)"
+                    const youtubeItem = document.getElementById('connectivity-youtube');
+                    const googleItem = document.getElementById('connectivity-google');
+
+                    if (youtubeItem) {
+                        const youtubeLatency = youtubeItem.querySelector('.connectivity-latency');
+                        if (youtubeLatency) {
+                            youtubeLatency.innerHTML = '<span>Not tested (CHINA)</span>';
+                        }
+                    }
+
+                    if (googleItem) {
+                        const googleLatency = googleItem.querySelector('.connectivity-latency');
+                        if (googleLatency) {
+                            googleLatency.innerHTML = '<span>Not tested (CHINA)</span>';
+                        }
+                    }
+
                     return;
                 }
 
