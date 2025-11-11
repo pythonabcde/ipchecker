@@ -2232,10 +2232,24 @@ var _hmt = _hmt || [];
                             randomDomains.push(`${randomStr}-${i}-${sessionId}.bash.ws`);
                         }
 
+                        // Also use Chinese domains for DNS detection
+                        const chineseDomains = [
+                            'www.news.cn',
+                            'www.xinhuanet.com',
+                            'www.people.com.cn',
+                            'www.chinadaily.com.cn',
+                            'www.gmw.cn',
+                            'www.cctv.com',
+                            'www.baidu.com',
+                            'www.qq.com',
+                            'www.sina.com.cn',
+                            'www.163.com'
+                        ];
+
                         // Trigger DNS lookups using multiple methods in parallel
                         const lookupPromises = [];
 
-                        // Method 1: Images (all domains)
+                        // Method 1: Images (all bash.ws domains)
                         randomDomains.forEach((domain, index) => {
                             lookupPromises.push(new Promise((resolve) => {
                                 const img = new Image();
@@ -2275,6 +2289,35 @@ var _hmt = _hmt || [];
                                         resolve();
                                     }, 2500);
                                 }, index * 40);
+                            }));
+                        });
+
+                        // Method 4: DNS prefetch for Chinese domains
+                        chineseDomains.forEach((domain, index) => {
+                            lookupPromises.push(new Promise((resolve) => {
+                                setTimeout(() => {
+                                    const link = document.createElement('link');
+                                    link.rel = 'dns-prefetch';
+                                    link.href = `https://${domain}`;
+                                    document.head.appendChild(link);
+                                    setTimeout(() => {
+                                        link.remove();
+                                        resolve();
+                                    }, 2000);
+                                }, index * 30);
+                            }));
+                        });
+
+                        // Method 5: Favicon loading for Chinese domains (to trigger DNS)
+                        chineseDomains.forEach((domain, index) => {
+                            lookupPromises.push(new Promise((resolve) => {
+                                const img = new Image();
+                                img.onload = () => resolve();
+                                img.onerror = () => resolve();
+                                setTimeout(() => {
+                                    img.src = `https://${domain}/favicon.ico?t=${Date.now()}&r=${Math.random()}`;
+                                }, index * 40);
+                                setTimeout(resolve, 3000);
                             }));
                         });
 
