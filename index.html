@@ -1275,12 +1275,10 @@ var _hmt = _hmt || [];
                 ipCheckResults[ip].country_code = finalLocationData.country_code;
 
                 // Set userCountryCode from the most common IP (for connectivity tests)
-                // Trigger test immediately once we have the country code for mostCommonIP
+                // Don't trigger test here, let periodic check handle it
                 if (!userCountryCode && ip === mostCommonIP && finalLocationData.country_code) {
                     userCountryCode = finalLocationData.country_code;
                     console.log(`[batchQueryLocations] Set userCountryCode to ${userCountryCode} from most common IP`);
-                    // Test YouTube and Google immediately if needed
-                    testBlockedSitesIfNeeded();
                 } else if (ip === mostCommonIP) {
                     console.log(`[batchQueryLocations] mostCommonIP detected but not setting userCountryCode: userCountryCode=${userCountryCode}, country_code=${finalLocationData.country_code}`);
                 }
@@ -1521,12 +1519,11 @@ var _hmt = _hmt || [];
                         updateField('summaryASN', parsed.asn);
 
                         // Store country code for connectivity tests
+                        // Don't trigger test here, let periodic check handle it
                         console.log(`[updateIPSummary] parsed.countryCode = ${parsed.countryCode}`);
                         if (parsed.countryCode) {
                             userCountryCode = parsed.countryCode.toUpperCase();
                             console.log(`[updateIPSummary] Set userCountryCode to ${userCountryCode}`);
-                            // Test YouTube and Google if not China IP
-                            testBlockedSitesIfNeeded();
                         } else {
                             console.log(`[updateIPSummary] WARNING: parsed.countryCode is empty!`);
                         }
@@ -1905,20 +1902,30 @@ var _hmt = _hmt || [];
                 const countryText = summaryCountryEl.textContent || summaryCountryEl.innerText;
 
                 // If country is empty or still loading, continue checking
-                if (!countryText || countryText === '-' || countryText.includes('...')) {
+                if (!countryText || countryText === '-' || countryText.includes('...') || countryText.trim() === '') {
                     return;
                 }
 
-                // If country contains "China" or "中国", skip YouTube/Google tests
-                if (countryText.includes('China') || countryText.includes('中国') || countryText.includes('CN)')) {
+                // If country contains "China" or "中国" or "CN", skip YouTube/Google tests
+                if (countryText.includes('China') ||
+                    countryText.includes('中国') ||
+                    countryText.includes('CN)') ||
+                    countryText.includes('(CN)') ||
+                    userCountryCode === 'CN') {
                     clearInterval(intervalId);
                     return;
                 }
 
-                // Country is non-China, start tests
+                // Must have a valid country name (at least 3 characters)
+                // This prevents triggering on partial/loading text
+                if (countryText.trim().length < 3) {
+                    return;
+                }
+
+                // Country is definitely non-China, start tests
                 clearInterval(intervalId);
 
-                // Set a dummy country code to pass the check
+                // Set country code if not already set
                 if (!userCountryCode) {
                     userCountryCode = 'US'; // Set to US or any non-CN code
                 }
