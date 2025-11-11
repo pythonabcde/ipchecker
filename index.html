@@ -1802,19 +1802,19 @@ var _hmt = _hmt || [];
                 const latencyDiv = item.querySelector('.connectivity-latency');
 
                 // Skip YouTube and Google initially, will be tested after country check
-                // But don't reset if tests already completed
                 if (test.name === 'YouTube' || test.name === 'Google') {
-                    // Check if test is already completed or running
+                    // Only skip if already completed (success/failed)
+                    // Don't skip if just "testing" - that's the initial state
                     if (item.classList.contains('success') ||
-                        item.classList.contains('failed') ||
-                        item.classList.contains('testing')) {
-                        // Test already started/completed, don't reset
+                        item.classList.contains('failed')) {
+                        // Test already completed, don't reset
                         continue;
                     }
 
-                    // Set to skipped only if not yet tested
+                    // Force set to skipped (even if currently "testing")
                     item.classList.remove('testing');
                     item.classList.add('skipped');
+                    latencyDiv.classList.remove('testing');
                     latencyDiv.classList.add('skipped');
                     latencyDiv.innerHTML = `
                         <span>Not tested</span>
