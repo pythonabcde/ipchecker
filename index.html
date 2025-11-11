@@ -1778,7 +1778,7 @@ var _hmt = _hmt || [];
 
             // Different initial content for YouTube/Google vs others
             const latencyContent = isBlockedSite
-                ? '<span>Not tested</span>'
+                ? '<span>Not tested (CHINA)</span>'
                 : '<span class="spinner"></span> Testing...';
 
             const latencyClass = isBlockedSite ? 'connectivity-latency skipped' : 'connectivity-latency';
@@ -1827,7 +1827,7 @@ var _hmt = _hmt || [];
                     latencyDiv.classList.remove('testing');
                     latencyDiv.classList.add('skipped');
                     latencyDiv.innerHTML = `
-                        <span>Not tested</span>
+                        <span>Not tested (CHINA)</span>
                     `;
                     continue;
                 }
