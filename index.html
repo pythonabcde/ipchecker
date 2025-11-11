@@ -1895,41 +1895,24 @@ var _hmt = _hmt || [];
                     }
                 }
 
-                // Check if country is displayed in the summary
-                const summaryCountryEl = document.getElementById('summaryCountry');
-                if (!summaryCountryEl) return;
+                // CRITICAL: Only check userCountryCode variable
+                // Do NOT check page text - too unreliable
+                // userCountryCode is set by updateIPSummary or batchQueryLocations
+                // Only start tests after userCountryCode is definitively set
 
-                const countryText = summaryCountryEl.textContent || summaryCountryEl.innerText;
-
-                // If country is empty or still loading, continue checking
-                if (!countryText || countryText === '-' || countryText.includes('...') || countryText.trim() === '') {
+                // If country code not yet determined, keep waiting
+                if (!userCountryCode) {
                     return;
                 }
 
-                // If country contains "China" or "中国" or "CN", skip YouTube/Google tests
-                if (countryText.includes('China') ||
-                    countryText.includes('中国') ||
-                    countryText.includes('CN)') ||
-                    countryText.includes('(CN)') ||
-                    userCountryCode === 'CN') {
+                // If country is China, stop checking and never test
+                if (userCountryCode === 'CN') {
                     clearInterval(intervalId);
                     return;
                 }
 
-                // Must have a valid country name (at least 3 characters)
-                // This prevents triggering on partial/loading text
-                if (countryText.trim().length < 3) {
-                    return;
-                }
-
-                // Country is definitely non-China, start tests
+                // Country code is set and NOT China - start tests
                 clearInterval(intervalId);
-
-                // Set country code if not already set
-                if (!userCountryCode) {
-                    userCountryCode = 'US'; // Set to US or any non-CN code
-                }
-
                 testBlockedSitesIfNeeded();
             }, 1000); // Check every second
         }
