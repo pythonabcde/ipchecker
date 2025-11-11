@@ -1672,13 +1672,13 @@ var _hmt = _hmt || [];
             {
                 name: 'ByteDance',
                 url: 'https://www.bytedance.com/favicon.ico',
-                type: 'domestic',
+                type: 'china',
                 icon: 'https://www.bytedance.com/favicon.ico'
             },
             {
                 name: 'Bilibili',
                 url: 'https://www.bilibili.com/favicon.ico',
-                type: 'domestic',
+                type: 'china',
                 icon: 'https://www.bilibili.com/favicon.ico'
             },
             {
@@ -1726,7 +1726,7 @@ var _hmt = _hmt || [];
             {
                 name: 'ip.39203.com',
                 url: 'https://ip.39203.com/favicon.ico',
-                type: 'domestic',
+                type: 'international',
                 icon: 'https://ip.39203.com/favicon.ico'
             }
         ];
@@ -1773,8 +1773,18 @@ var _hmt = _hmt || [];
             item.className = isBlockedSite ? 'connectivity-item skipped' : 'connectivity-item testing';
             item.id = `connectivity-${test.name.toLowerCase().replace(/\s+/g, '-').replace(/\./g, '-')}`;
 
-            const badgeClass = test.type === 'domestic' ? 'domestic' : 'international';
-            const badgeText = test.type === 'domestic' ? 'Domestic' : 'International';
+            // Determine badge class and text based on type
+            let badgeClass, badgeText;
+            if (test.type === 'china') {
+                badgeClass = 'domestic';
+                badgeText = 'China';
+            } else if (test.type === 'domestic') {
+                badgeClass = 'domestic';
+                badgeText = 'Domestic';
+            } else {
+                badgeClass = 'international';
+                badgeText = 'International';
+            }
 
             // Different initial content for YouTube/Google vs others
             const latencyContent = isBlockedSite
