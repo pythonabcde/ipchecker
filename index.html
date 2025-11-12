@@ -1058,7 +1058,7 @@ var _hmt = _hmt || [];
                 for (let attempt = 1; attempt <= 2; attempt++) {
                     try {
                         const controller = new AbortController();
-                        const timeout = setTimeout(() => controller.abort(), 8000); // Increased to 8 seconds
+                        const timeout = setTimeout(() => controller.abort(), 20000); // Increased to 20 seconds for slow networks
 
                         const response = await fetch(service.url, {
                             signal: controller.signal
@@ -1578,7 +1578,7 @@ var _hmt = _hmt || [];
 
             try {
                 const controller = new AbortController();
-                const timeout = setTimeout(() => controller.abort(), 10000); // 10 seconds timeout
+                const timeout = setTimeout(() => controller.abort(), 15000); // 15 seconds timeout for slow networks
 
                 const response = await fetch(checker.url, {
                     signal: controller.signal,
@@ -2110,7 +2110,7 @@ var _hmt = _hmt || [];
             for (const api of geoApis) {
                 try {
                     const controller = new AbortController();
-                    const timeout = setTimeout(() => controller.abort(), 5000);
+                    const timeout = setTimeout(() => controller.abort(), 10000); // Increased to 10 seconds for slow networks
 
                     const response = await fetch(api.url, {
                         signal: controller.signal
