@@ -2347,7 +2347,15 @@ var _hmt = _hmt || [];
 
         // WebRTC Leak Test - Test multiple STUN servers with NAT type detection
         async function testWebRTCLeak() {
+            console.log('=== WebRTC Leak Test Starting ===');
             const webrtcGrid = document.getElementById('webrtcGrid');
+
+            if (!webrtcGrid) {
+                console.error('WebRTC grid element not found!');
+                return;
+            }
+
+            console.log('WebRTC grid element found, creating tests...');
 
             // STUN servers to test
             const stunServers = [
@@ -2357,6 +2365,8 @@ var _hmt = _hmt || [];
                 { name: 'BlackBerry', url: 'stun:stun.voip.blackberry.com:3478', icon: '⚫' },
                 { name: 'Mozilla', url: 'stun:stun.services.mozilla.com:3478', icon: '🟣' }
             ];
+
+            console.log('Testing', stunServers.length, 'STUN servers');
 
             // Create initial UI for each STUN server
             stunServers.forEach(server => {
@@ -2388,8 +2398,13 @@ var _hmt = _hmt || [];
             });
 
             // Test each STUN server
-            const testPromises = stunServers.map(server => testSingleSTUNServer(server));
-            await Promise.all(testPromises);
+            try {
+                const testPromises = stunServers.map(server => testSingleSTUNServer(server));
+                await Promise.all(testPromises);
+                console.log('=== WebRTC Leak Test Completed ===');
+            } catch (error) {
+                console.error('Error during WebRTC tests:', error);
+            }
         }
 
         // Test a single STUN server
@@ -2401,11 +2416,14 @@ var _hmt = _hmt || [];
                 const result = await performWebRTCTest(server.url);
 
                 if (result.success && result.ip) {
+                    console.log(`${server.name}: Detected IP ${result.ip}`);
+
                     // Get geolocation for the detected IP (use existing function)
                     const geoData = await getDNSServerGeoLocation(result.ip);
 
                     // Determine if this is a leak (IP is different from user's main IP)
-                    const isLeak = result.ip !== mostCommonIP;
+                    // If mostCommonIP is not yet available, we can't determine leak status
+                    const isLeak = mostCommonIP && result.ip !== mostCommonIP;
 
                     // Update UI
                     item.className = isLeak ? 'webrtc-test-item leak' : 'webrtc-test-item success';
@@ -2440,17 +2458,23 @@ var _hmt = _hmt || [];
                     resultValues[2].textContent = 'N/A';
                 }
             } catch (error) {
-                console.log(`WebRTC test failed for ${server.name}:`, error);
+                console.error(`WebRTC test failed for ${server.name}:`, error);
 
-                item.className = 'webrtc-test-item failed';
-                const badge = item.querySelector('.webrtc-status-badge');
-                badge.className = 'webrtc-status-badge failed';
-                badge.textContent = '✗ Error';
+                if (item) {
+                    item.className = 'webrtc-test-item failed';
+                    const badge = item.querySelector('.webrtc-status-badge');
+                    if (badge) {
+                        badge.className = 'webrtc-status-badge failed';
+                        badge.textContent = '✗ Error';
+                    }
 
-                const resultValues = item.querySelectorAll('.webrtc-result-value');
-                resultValues[0].textContent = 'Error';
-                resultValues[1].textContent = 'N/A';
-                resultValues[2].textContent = 'N/A';
+                    const resultValues = item.querySelectorAll('.webrtc-result-value');
+                    if (resultValues.length >= 3) {
+                        resultValues[0].textContent = 'Error';
+                        resultValues[1].textContent = 'N/A';
+                        resultValues[2].textContent = 'N/A';
+                    }
+                }
             }
         }
 
