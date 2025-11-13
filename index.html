@@ -2401,8 +2401,8 @@ var _hmt = _hmt || [];
                 const result = await performWebRTCTest(server.url);
 
                 if (result.success && result.ip) {
-                    // Get geolocation for the detected IP
-                    const geoData = await getIPGeolocation(result.ip);
+                    // Get geolocation for the detected IP (use existing function)
+                    const geoData = await getDNSServerGeoLocation(result.ip);
 
                     // Determine if this is a leak (IP is different from user's main IP)
                     const isLeak = result.ip !== mostCommonIP;
@@ -2422,7 +2422,7 @@ var _hmt = _hmt || [];
                     resultValues[1].textContent = result.natType || 'Unknown';
                     resultValues[1].className = 'webrtc-result-value nat';
 
-                    const region = geoData ? `${geoData.country || 'Unknown'}` : 'Unknown';
+                    const region = geoData ? `${geoData.country_name || 'Unknown'}` : 'Unknown';
                     resultValues[2].textContent = region;
                     resultValues[2].className = 'webrtc-result-value';
 
