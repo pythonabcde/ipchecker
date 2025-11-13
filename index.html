@@ -1426,6 +1426,11 @@ var _hmt = _hmt || [];
                 if (!userCountryCode && ip === mostCommonIP && finalLocationData.country_code) {
                     userCountryCode = finalLocationData.country_code;
                     console.log(`[batchQueryLocations] Set userCountryCode to ${userCountryCode} from most common IP`);
+
+                    // If non-Chinese IP detected, replace Ekiga with Google in WebRTC test
+                    if (userCountryCode !== 'CN') {
+                        replaceEkigaWithGoogle();
+                    }
                 } else if (ip === mostCommonIP) {
                     console.log(`[batchQueryLocations] mostCommonIP detected but not setting userCountryCode: userCountryCode=${userCountryCode}, country_code=${finalLocationData.country_code}`);
                 }
@@ -2353,6 +2358,51 @@ var _hmt = _hmt || [];
             });
         }
 
+        // Replace Ekiga with Google when international IP is detected
+        async function replaceEkigaWithGoogle() {
+            console.log('=== Replacing Ekiga with Google ===');
+            const ekigaItem = document.getElementById('webrtc-ekiga');
+
+            if (!ekigaItem) {
+                console.log('Ekiga test not found, skipping replacement');
+                return;
+            }
+
+            // Update to Google
+            const googleServer = { name: 'Google', url: 'stun:stun.l.google.com:19302', icon: '🌐' };
+
+            // Update the item ID and reset status
+            ekigaItem.id = 'webrtc-google';
+            ekigaItem.className = 'webrtc-test-item testing';
+
+            // Update UI
+            ekigaItem.innerHTML = `
+                <div class="webrtc-server-header">
+                    <div class="webrtc-server-name">${googleServer.icon} ${googleServer.name}</div>
+                    <span class="webrtc-status-badge testing">
+                        <span class="webrtc-spinner"></span> Testing
+                    </span>
+                </div>
+                <div class="webrtc-server-url">${googleServer.url}</div>
+                <div class="webrtc-result-row">
+                    <span class="webrtc-result-label">IP Address:</span>
+                    <span class="webrtc-result-value">Detecting...</span>
+                </div>
+                <div class="webrtc-result-row">
+                    <span class="webrtc-result-label">NAT Type:</span>
+                    <span class="webrtc-result-value">Detecting...</span>
+                </div>
+                <div class="webrtc-result-row">
+                    <span class="webrtc-result-label">Region:</span>
+                    <span class="webrtc-result-value">Detecting...</span>
+                </div>
+            `;
+
+            // Run Google test
+            console.log('Starting Google STUN test to replace Ekiga');
+            await testSingleSTUNServer(googleServer);
+        }
+
         // WebRTC Leak Test - Test multiple STUN servers with NAT type detection
         async function testWebRTCLeak() {
             console.log('=== WebRTC Leak Test Starting ===');
@@ -2365,26 +2415,39 @@ var _hmt = _hmt || [];
 
             console.log('WebRTC grid element found, creating tests...');
 
-            // STUN servers to test - avoid blocked servers for Chinese users
+            // STUN servers to test - Default to safe servers (Ekiga instead of Google)
+            // Will dynamically switch Ekiga to Google if non-Chinese IP is detected
             let stunServers;
 
+            // Always start with safe servers (Ekiga) - will be replaced by Google for international users
+            console.log(`WebRTC test starting, userCountryCode: ${userCountryCode || 'not yet detected'}`);
+
             if (userCountryCode === 'CN') {
-                // Chinese users: avoid Google and other blocked services
-                console.log('Chinese IP detected, using China-safe STUN servers');
+                // Chinese users: use safe servers
+                console.log('Chinese IP confirmed, using China-safe STUN servers');
                 stunServers = [
                     { name: 'Cloudflare', url: 'stun:stun.cloudflare.com:3478', icon: '🌐' },
                     { name: 'Twilio', url: 'stun:global.stun.twilio.com:3478', icon: '🌐' },
                     { name: 'Stunprotocol', url: 'stun:stun.stunprotocol.org:3478', icon: '🌐' },
                     { name: 'Ekiga', url: 'stun:stun.ekiga.net:3478', icon: '🌐' }
                 ];
-            } else {
-                // International users: use all available servers
-                console.log('International IP detected, using all STUN servers');
+            } else if (userCountryCode && userCountryCode !== 'CN') {
+                // International users (country detected and not CN): use Google
+                console.log('International IP confirmed, using all STUN servers including Google');
                 stunServers = [
                     { name: 'Google', url: 'stun:stun.l.google.com:19302', icon: '🌐' },
                     { name: 'Cloudflare', url: 'stun:stun.cloudflare.com:3478', icon: '🌐' },
                     { name: 'Twilio', url: 'stun:global.stun.twilio.com:3478', icon: '🌐' },
                     { name: 'BlackBerry', url: 'stun:stun.voip.blackberry.com:3478', icon: '🌐' }
+                ];
+            } else {
+                // Country not yet detected: default to safe servers (Ekiga)
+                console.log('Country not yet detected, defaulting to safe servers (Ekiga)');
+                stunServers = [
+                    { name: 'Cloudflare', url: 'stun:stun.cloudflare.com:3478', icon: '🌐' },
+                    { name: 'Twilio', url: 'stun:global.stun.twilio.com:3478', icon: '🌐' },
+                    { name: 'Stunprotocol', url: 'stun:stun.stunprotocol.org:3478', icon: '🌐' },
+                    { name: 'Ekiga', url: 'stun:stun.ekiga.net:3478', icon: '🌐' }
                 ];
             }
 
