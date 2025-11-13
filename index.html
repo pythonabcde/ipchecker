@@ -432,6 +432,139 @@
             box-shadow: none;
         }
 
+        .webrtc-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .webrtc-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .webrtc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .webrtc-test-item {
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 8px;
+            border-left: 4px solid #cbd5e0;
+            transition: all 0.3s ease;
+        }
+
+        .webrtc-test-item.testing {
+            border-left-color: #4299e1;
+            background: linear-gradient(90deg, #ebf8ff 0%, #f7fafc 100%);
+        }
+
+        .webrtc-test-item.success {
+            border-left-color: #48bb78;
+            background: linear-gradient(90deg, #f0fff4 0%, #f7fafc 100%);
+        }
+
+        .webrtc-test-item.failed {
+            border-left-color: #fc8181;
+            background: linear-gradient(90deg, #fff5f5 0%, #f7fafc 100%);
+        }
+
+        .webrtc-test-item.leak {
+            border-left-color: #f56565;
+            background: linear-gradient(90deg, #fff5f5 0%, #f7fafc 100%);
+            box-shadow: 0 0 0 2px rgba(245, 101, 101, 0.2);
+        }
+
+        .webrtc-server-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .webrtc-server-name {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 1rem;
+        }
+
+        .webrtc-status-badge {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .webrtc-status-badge.testing {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        .webrtc-status-badge.success {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .webrtc-status-badge.failed {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .webrtc-server-url {
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            color: #718096;
+            margin-bottom: 8px;
+        }
+
+        .webrtc-result-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            font-size: 0.85rem;
+        }
+
+        .webrtc-result-label {
+            color: #718096;
+            font-weight: 500;
+        }
+
+        .webrtc-result-value {
+            font-family: 'Courier New', monospace;
+            color: #2d3748;
+            font-weight: 600;
+        }
+
+        .webrtc-result-value.ip {
+            color: #667eea;
+        }
+
+        .webrtc-result-value.nat {
+            color: #48bb78;
+        }
+
+        .webrtc-result-value.leak {
+            color: #f56565;
+        }
+
+        .webrtc-spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #cbd5e0;
+            border-top-color: #4299e1;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
         .dns-section {
             background: white;
             border-radius: 12px;
@@ -699,6 +832,12 @@ var _hmt = _hmt || [];
         <div class="connectivity-section">
             <div class="connectivity-title">Connectivity Test</div>
             <div class="connectivity-grid" id="connectivityGrid">
+            </div>
+        </div>
+
+        <div class="webrtc-section">
+            <div class="webrtc-title">WebRTC Leak Test</div>
+            <div class="webrtc-grid" id="webrtcGrid">
             </div>
         </div>
 
@@ -2206,6 +2345,252 @@ var _hmt = _hmt || [];
             });
         }
 
+        // WebRTC Leak Test - Test multiple STUN servers with NAT type detection
+        async function testWebRTCLeak() {
+            const webrtcGrid = document.getElementById('webrtcGrid');
+
+            // STUN servers to test
+            const stunServers = [
+                { name: 'Google', url: 'stun:stun.l.google.com:19302', icon: '🔵' },
+                { name: 'Cloudflare', url: 'stun:stun.cloudflare.com:3478', icon: '🟠' },
+                { name: 'Twilio', url: 'stun:global.stun.twilio.com:3478', icon: '🔴' },
+                { name: 'BlackBerry', url: 'stun:stun.voip.blackberry.com:3478', icon: '⚫' },
+                { name: 'Mozilla', url: 'stun:stun.services.mozilla.com:3478', icon: '🟣' }
+            ];
+
+            // Create initial UI for each STUN server
+            stunServers.forEach(server => {
+                const item = document.createElement('div');
+                item.className = 'webrtc-test-item testing';
+                item.id = `webrtc-${server.name.toLowerCase()}`;
+                item.innerHTML = `
+                    <div class="webrtc-server-header">
+                        <div class="webrtc-server-name">${server.icon} ${server.name}</div>
+                        <span class="webrtc-status-badge testing">
+                            <span class="webrtc-spinner"></span> Testing
+                        </span>
+                    </div>
+                    <div class="webrtc-server-url">${server.url}</div>
+                    <div class="webrtc-result-row">
+                        <span class="webrtc-result-label">IP Address:</span>
+                        <span class="webrtc-result-value">Detecting...</span>
+                    </div>
+                    <div class="webrtc-result-row">
+                        <span class="webrtc-result-label">NAT Type:</span>
+                        <span class="webrtc-result-value">Detecting...</span>
+                    </div>
+                    <div class="webrtc-result-row">
+                        <span class="webrtc-result-label">Region:</span>
+                        <span class="webrtc-result-value">Detecting...</span>
+                    </div>
+                `;
+                webrtcGrid.appendChild(item);
+            });
+
+            // Test each STUN server
+            const testPromises = stunServers.map(server => testSingleSTUNServer(server));
+            await Promise.all(testPromises);
+        }
+
+        // Test a single STUN server
+        async function testSingleSTUNServer(server) {
+            const itemId = `webrtc-${server.name.toLowerCase()}`;
+            const item = document.getElementById(itemId);
+
+            try {
+                const result = await performWebRTCTest(server.url);
+
+                if (result.success && result.ip) {
+                    // Get geolocation for the detected IP
+                    const geoData = await getIPGeolocation(result.ip);
+
+                    // Determine if this is a leak (IP is different from user's main IP)
+                    const isLeak = result.ip !== mostCommonIP;
+
+                    // Update UI
+                    item.className = isLeak ? 'webrtc-test-item leak' : 'webrtc-test-item success';
+
+                    const badge = item.querySelector('.webrtc-status-badge');
+                    badge.className = isLeak ? 'webrtc-status-badge failed' : 'webrtc-status-badge success';
+                    badge.textContent = isLeak ? '⚠️ Leak Detected' : '✓ No Leak';
+
+                    // Update result values
+                    const resultValues = item.querySelectorAll('.webrtc-result-value');
+                    resultValues[0].textContent = result.ip;
+                    resultValues[0].className = isLeak ? 'webrtc-result-value leak' : 'webrtc-result-value ip';
+
+                    resultValues[1].textContent = result.natType || 'Unknown';
+                    resultValues[1].className = 'webrtc-result-value nat';
+
+                    const region = geoData ? `${geoData.country || 'Unknown'}` : 'Unknown';
+                    resultValues[2].textContent = region;
+                    resultValues[2].className = 'webrtc-result-value';
+
+                } else {
+                    // Test failed
+                    item.className = 'webrtc-test-item failed';
+
+                    const badge = item.querySelector('.webrtc-status-badge');
+                    badge.className = 'webrtc-status-badge failed';
+                    badge.textContent = '✗ Failed';
+
+                    const resultValues = item.querySelectorAll('.webrtc-result-value');
+                    resultValues[0].textContent = 'Not detected';
+                    resultValues[1].textContent = 'N/A';
+                    resultValues[2].textContent = 'N/A';
+                }
+            } catch (error) {
+                console.log(`WebRTC test failed for ${server.name}:`, error);
+
+                item.className = 'webrtc-test-item failed';
+                const badge = item.querySelector('.webrtc-status-badge');
+                badge.className = 'webrtc-status-badge failed';
+                badge.textContent = '✗ Error';
+
+                const resultValues = item.querySelectorAll('.webrtc-result-value');
+                resultValues[0].textContent = 'Error';
+                resultValues[1].textContent = 'N/A';
+                resultValues[2].textContent = 'N/A';
+            }
+        }
+
+        // Perform WebRTC test with a STUN server
+        function performWebRTCTest(stunUrl) {
+            return new Promise((resolve) => {
+                try {
+                    const config = {
+                        iceServers: [{ urls: stunUrl }]
+                    };
+
+                    const pc = new RTCPeerConnection(config);
+                    const result = {
+                        success: false,
+                        ip: null,
+                        natType: null,
+                        candidates: []
+                    };
+
+                    // Create a data channel
+                    pc.createDataChannel('webrtc-test');
+
+                    // Collect ICE candidates
+                    pc.onicecandidate = (event) => {
+                        if (event.candidate) {
+                            const candidate = event.candidate.candidate;
+                            result.candidates.push(candidate);
+
+                            // Extract IP from candidate
+                            const ipRegex = /([0-9]{1,3}(\.[0-9]{1,3}){3}|[a-f0-9:]+:[a-f0-9:]+)/gi;
+                            const ips = candidate.match(ipRegex);
+
+                            if (ips && ips.length > 0) {
+                                for (const ip of ips) {
+                                    // Skip local IPs
+                                    if (!ip.startsWith('192.168.') &&
+                                        !ip.startsWith('10.') &&
+                                        !ip.startsWith('172.16.') &&
+                                        !ip.startsWith('172.17.') &&
+                                        !ip.startsWith('172.18.') &&
+                                        !ip.startsWith('172.19.') &&
+                                        !ip.startsWith('172.20.') &&
+                                        !ip.startsWith('172.21.') &&
+                                        !ip.startsWith('172.22.') &&
+                                        !ip.startsWith('172.23.') &&
+                                        !ip.startsWith('172.24.') &&
+                                        !ip.startsWith('172.25.') &&
+                                        !ip.startsWith('172.26.') &&
+                                        !ip.startsWith('172.27.') &&
+                                        !ip.startsWith('172.28.') &&
+                                        !ip.startsWith('172.29.') &&
+                                        !ip.startsWith('172.30.') &&
+                                        !ip.startsWith('172.31.') &&
+                                        !ip.startsWith('127.') &&
+                                        !ip.startsWith('0.') &&
+                                        !ip.startsWith('169.254.') &&
+                                        !ip.startsWith('fe80:') &&
+                                        !ip.startsWith('::1') &&
+                                        !ip.startsWith('fc00:') &&
+                                        !ip.startsWith('fd00:')) {
+                                        result.ip = ip;
+                                        result.success = true;
+                                    }
+                                }
+                            }
+                        } else if (event.candidate === null) {
+                            // ICE gathering complete
+                            result.natType = detectNATType(result.candidates);
+                            pc.close();
+                            resolve(result);
+                        }
+                    };
+
+                    // Create offer
+                    pc.createOffer()
+                        .then(offer => pc.setLocalDescription(offer))
+                        .catch(err => {
+                            console.log('WebRTC offer error:', err);
+                            pc.close();
+                            resolve(result);
+                        });
+
+                    // Timeout after 8 seconds
+                    setTimeout(() => {
+                        if (result.candidates.length > 0) {
+                            result.natType = detectNATType(result.candidates);
+                        }
+                        pc.close();
+                        resolve(result);
+                    }, 8000);
+
+                } catch (error) {
+                    console.log('WebRTC test error:', error);
+                    resolve({ success: false, ip: null, natType: null, candidates: [] });
+                }
+            });
+        }
+
+        // Detect NAT type based on ICE candidates
+        function detectNATType(candidates) {
+            if (!candidates || candidates.length === 0) {
+                return 'Unknown';
+            }
+
+            let hasHost = false;
+            let hasSrflx = false;
+            let hasRelay = false;
+            let hostIPs = new Set();
+            let srflxIPs = new Set();
+
+            candidates.forEach(candidate => {
+                if (candidate.includes('typ host')) {
+                    hasHost = true;
+                    const ipMatch = candidate.match(/([0-9]{1,3}(\.[0-9]{1,3}){3})/);
+                    if (ipMatch) hostIPs.add(ipMatch[0]);
+                }
+                if (candidate.includes('typ srflx')) {
+                    hasSrflx = true;
+                    const ipMatch = candidate.match(/([0-9]{1,3}(\.[0-9]{1,3}){3})/);
+                    if (ipMatch) srflxIPs.add(ipMatch[0]);
+                }
+                if (candidate.includes('typ relay')) {
+                    hasRelay = true;
+                }
+            });
+
+            // Simplified NAT type detection
+            if (hasRelay) {
+                return 'Symmetric (Relay)';
+            } else if (hasSrflx && srflxIPs.size > 1) {
+                return 'Symmetric';
+            } else if (hasSrflx && hostIPs.size > 0) {
+                return 'Port Restricted Cone';
+            } else if (hasHost) {
+                return 'Full Cone or No NAT';
+            }
+
+            return 'Port Restricted Cone or Symmetric';
+        }
+
         // DNS leak detection - Enhanced to capture ALL DNS servers
         async function detectDNSLeak() {
             const statusDiv = document.getElementById('dnsStatus');
@@ -2776,6 +3161,7 @@ var _hmt = _hmt || [];
             document.addEventListener('DOMContentLoaded', () => {
                 init();
                 runConnectivityTests();
+                testWebRTCLeak();
                 detectDNSLeak();
                 collectDetectedInfo();
                 collectSystemInfo();
@@ -2787,6 +3173,7 @@ var _hmt = _hmt || [];
         } else {
             init();
             runConnectivityTests();
+            testWebRTCLeak();
             detectDNSLeak();
             collectDetectedInfo();
             collectSystemInfo();
