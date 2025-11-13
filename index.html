@@ -2357,13 +2357,12 @@ var _hmt = _hmt || [];
 
             console.log('WebRTC grid element found, creating tests...');
 
-            // STUN servers to test
+            // STUN servers to test (removed Mozilla due to low reliability)
             const stunServers = [
                 { name: 'Google', url: 'stun:stun.l.google.com:19302', icon: '🔵' },
                 { name: 'Cloudflare', url: 'stun:stun.cloudflare.com:3478', icon: '🟠' },
                 { name: 'Twilio', url: 'stun:global.stun.twilio.com:3478', icon: '🔴' },
-                { name: 'BlackBerry', url: 'stun:stun.voip.blackberry.com:3478', icon: '⚫' },
-                { name: 'Mozilla', url: 'stun:stun.services.mozilla.com:3478', icon: '🟣' }
+                { name: 'BlackBerry', url: 'stun:stun.voip.blackberry.com:3478', icon: '⚫' }
             ];
 
             console.log('Testing', stunServers.length, 'STUN servers');
