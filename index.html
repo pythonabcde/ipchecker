@@ -577,7 +577,14 @@
             font-size: 1.2rem;
             font-weight: 600;
             color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .dns-description {
+            font-size: 0.9rem;
+            color: #718096;
             margin-bottom: 15px;
+            line-height: 1.5;
         }
 
         .dns-status {
@@ -843,6 +850,7 @@ var _hmt = _hmt || [];
 
         <div class="dns-section">
             <div class="dns-title">DNS Leak Test</div>
+            <div class="dns-description">Detect whether DNS queries go through VPN/proxy instead of local ISP</div>
             <div class="dns-status checking" id="dnsStatus">
                 <div class="dns-status-icon">🔍</div>
                 <div class="dns-status-text">
