@@ -1057,7 +1057,7 @@ var _hmt = _hmt || [];
         let ipCheckResults = {}; // Store IP check results: { ip: [checkerName1, checkerName2, ...] }
         let allChecksComplete = false; // Flag to track if all IP checks are complete
         let blockedSitesTestStarted = false; // Flag to prevent duplicate YouTube/Google tests
-        let webrtcEkigaReplacementDone = false; // Flag to prevent duplicate WebRTC Ekiga->Google replacement
+        let webrtcEkigaReplacementDone = false; // Flag to prevent duplicate WebRTC Nextcloud->Google replacement
 
         // Extract domain from URL
         function extractDomain(url) {
@@ -1427,7 +1427,7 @@ var _hmt = _hmt || [];
                 if (!userCountryCode && ip === mostCommonIP && finalLocationData.country_code) {
                     userCountryCode = finalLocationData.country_code;
                     console.log(`[batchQueryLocations] Set userCountryCode to ${userCountryCode} from most common IP`);
-                    // Note: Periodic check will handle YouTube/Google tests and WebRTC Ekiga->Google replacement
+                    // Note: Periodic check will handle YouTube/Google tests and WebRTC Nextcloud->Google replacement
                 } else if (ip === mostCommonIP) {
                     console.log(`[batchQueryLocations] mostCommonIP detected but not setting userCountryCode: userCountryCode=${userCountryCode}, country_code=${finalLocationData.country_code}`);
                 }
@@ -2102,7 +2102,7 @@ var _hmt = _hmt || [];
                 // Country code is set and NOT China - start tests
                 clearInterval(intervalId);
                 testBlockedSitesIfNeeded();
-                replaceEkigaWithGoogle(); // Also replace Ekiga with Google in WebRTC test
+                replaceEkigaWithGoogle(); // Also replace Nextcloud with Google in WebRTC test
             }, 1000); // Check every second
         }
 
@@ -2356,11 +2356,11 @@ var _hmt = _hmt || [];
             });
         }
 
-        // Replace Ekiga with Google when international IP is detected
+        // Replace Nextcloud with Google when international IP is detected
         async function replaceEkigaWithGoogle() {
             // Prevent duplicate replacement
             if (webrtcEkigaReplacementDone) {
-                console.log('WebRTC Ekiga replacement already done, skipping');
+                console.log('WebRTC Nextcloud->Google replacement already done, skipping');
                 return;
             }
 
@@ -2371,15 +2371,15 @@ var _hmt = _hmt || [];
             }
 
             if (userCountryCode === 'CN') {
-                console.log('Chinese IP detected, keeping Ekiga server');
+                console.log('Chinese IP detected, keeping Nextcloud server');
                 return;
             }
 
-            console.log('=== Replacing Ekiga with Google ===');
-            const ekigaItem = document.getElementById('webrtc-ekiga');
+            console.log('=== Replacing Nextcloud with Google ===');
+            const nextcloudItem = document.getElementById('webrtc-nextcloud');
 
-            if (!ekigaItem) {
-                console.log('Ekiga test not found, skipping replacement');
+            if (!nextcloudItem) {
+                console.log('Nextcloud test not found, skipping replacement');
                 return;
             }
 
@@ -2390,11 +2390,11 @@ var _hmt = _hmt || [];
             const googleServer = { name: 'Google', url: 'stun:stun.l.google.com:19302', icon: '🌐' };
 
             // Update the item ID and reset status
-            ekigaItem.id = 'webrtc-google';
-            ekigaItem.className = 'webrtc-test-item testing';
+            nextcloudItem.id = 'webrtc-google';
+            nextcloudItem.className = 'webrtc-test-item testing';
 
             // Update UI
-            ekigaItem.innerHTML = `
+            nextcloudItem.innerHTML = `
                 <div class="webrtc-server-header">
                     <div class="webrtc-server-name">${googleServer.icon} ${googleServer.name}</div>
                     <span class="webrtc-status-badge testing">
@@ -2417,7 +2417,7 @@ var _hmt = _hmt || [];
             `;
 
             // Run Google test
-            console.log('Starting Google STUN test to replace Ekiga');
+            console.log('Starting Google STUN test to replace Nextcloud');
             await testSingleSTUNServer(googleServer);
         }
 
@@ -2433,18 +2433,18 @@ var _hmt = _hmt || [];
 
             console.log('WebRTC grid element found, creating tests...');
 
-            // STUN servers to test - Always start with safe servers (Ekiga instead of Google)
-            // Will dynamically switch Ekiga to Google if non-Chinese IP is detected
+            // STUN servers to test - Always start with safe servers (Nextcloud instead of Google)
+            // Will dynamically switch Nextcloud to Google if non-Chinese IP is detected
             console.log(`WebRTC test starting, userCountryCode: ${userCountryCode || 'not yet detected'}`);
-            console.log('Defaulting to safe servers (Ekiga) - will be replaced by Google for international users');
+            console.log('Defaulting to safe servers (Nextcloud) - will be replaced by Google for international users');
 
-            // Always start with Ekiga (safe for Chinese users)
+            // Always start with Nextcloud (safe for Chinese users)
             // Will be dynamically replaced with Google for non-Chinese users
             const stunServers = [
                 { name: 'Cloudflare', url: 'stun:stun.cloudflare.com:3478', icon: '🌐' },
                 { name: 'Twilio', url: 'stun:global.stun.twilio.com:3478', icon: '🌐' },
                 { name: 'BlackBerry', url: 'stun:stun.voip.blackberry.com:3478', icon: '🌐' },
-                { name: 'Ekiga', url: 'stun:stun.ekiga.net:3478', icon: '🌐' }
+                { name: 'Nextcloud', url: 'stun:stun.nextcloud.com:443', icon: '🌐' }
             ];
 
             console.log('Testing', stunServers.length, 'STUN servers');
