@@ -660,23 +660,9 @@
             border-bottom: 2px solid #e2e8f0;
         }
 
-        /* HTTP Headers section - more understated styling */
-        .http-headers-section {
-            opacity: 0.85;
-        }
-
-        .http-headers-section .info-title {
-            font-size: 1.05rem;
-            font-weight: 500;
-            color: #a0aec0;
-        }
-
-        .http-headers-section .info-grid {
-            font-size: 0.9rem;
-        }
-
+        /* HTTP Headers error message styling */
         .http-headers-error {
-            color: #a0aec0;
+            color: #718096;
             font-size: 0.9rem;
             padding: 10px 0;
             text-align: left;
@@ -954,9 +940,9 @@
             </div>
         </div>
 
-        <div class="info-section http-headers-section">
+        <div class="info-section">
             <div class="info-title">HTTP Request Headers (to httpbin.org)</div>
-            <div class="dns-description" style="margin-bottom: 15px; color: #a0aec0;">This section uses a third-party service (httpbin.org) to echo your HTTP request headers. If the service is blocked or unreachable from your network, this section may not display any results.</div>
+            <div class="dns-description" style="margin-bottom: 15px; color: #888;">This section uses a third-party service (httpbin.org) to echo your HTTP request headers. If the service is blocked or unreachable from your network, this section may not display any results.</div>
             <div class="info-grid" id="httpHeaders">
             </div>
         </div>
