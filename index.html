@@ -840,6 +840,7 @@
 
         <div class="webrtc-section">
             <div class="webrtc-title">WebRTC Leak Test</div>
+            <div class="dns-description" style="margin-bottom: 15px; color: #888;">本工具基于浏览器的 ICE 候选进行检测，结果仅供参考。</div>
             <div class="webrtc-grid" id="webrtcGrid">
             </div>
         </div>
@@ -2428,7 +2429,7 @@
                     <span class="webrtc-result-value">Detecting...</span>
                 </div>
                 <div class="webrtc-result-row">
-                    <span class="webrtc-result-label">NAT Type:</span>
+                    <span class="webrtc-result-label">网络信息:</span>
                     <span class="webrtc-result-value">Detecting...</span>
                 </div>
                 <div class="webrtc-result-row">
@@ -2488,7 +2489,7 @@
                         <span class="webrtc-result-value">Detecting...</span>
                     </div>
                     <div class="webrtc-result-row">
-                        <span class="webrtc-result-label">NAT Type:</span>
+                        <span class="webrtc-result-label">网络信息:</span>
                         <span class="webrtc-result-value">Detecting...</span>
                     </div>
                     <div class="webrtc-result-row">
@@ -2539,7 +2540,9 @@
                     resultValues[0].textContent = result.ip;
                     resultValues[0].className = isLeak ? 'webrtc-result-value leak' : 'webrtc-result-value ip';
 
-                    resultValues[1].textContent = result.natType || 'Unknown';
+                    // Display network info with disclaimer
+                    const networkInfo = result.natType || '无数据';
+                    resultValues[1].textContent = `${networkInfo} (仅供参考)`;
                     resultValues[1].className = 'webrtc-result-value nat';
 
                     const region = geoData ? `${geoData.country_name || 'Unknown'}` : 'Unknown';
@@ -2608,8 +2611,8 @@
                             // Extract IP from candidate with improved regex
                             // IPv4: 0-255.0-255.0-255.0-255
                             const ipv4Regex = /\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/g;
-                            // IPv6: full format
-                            const ipv6Regex = /\b(?:[a-f0-9]{1,4}:){7}[a-f0-9]{1,4}\b/gi;
+                            // IPv6: supports compressed format (::, ::1, 2001:db8::1, etc.)
+                            const ipv6Regex = /(?:(?:[a-f0-9]{1,4}:){7}[a-f0-9]{1,4}|(?:[a-f0-9]{1,4}:){1,7}:|(?:[a-f0-9]{1,4}:){1,6}:[a-f0-9]{1,4}|(?:[a-f0-9]{1,4}:){1,5}(?::[a-f0-9]{1,4}){1,2}|(?:[a-f0-9]{1,4}:){1,4}(?::[a-f0-9]{1,4}){1,3}|(?:[a-f0-9]{1,4}:){1,3}(?::[a-f0-9]{1,4}){1,4}|(?:[a-f0-9]{1,4}:){1,2}(?::[a-f0-9]{1,4}){1,5}|[a-f0-9]{1,4}:(?:(?::[a-f0-9]{1,4}){1,6})|:(?:(?::[a-f0-9]{1,4}){1,7}|:)|::(?:ffff(?::0{1,4})?:)?(?:(?:25[0-5]|(?:2[0-4]|1?[0-9])?[0-9])\.){3}(?:25[0-5]|(?:2[0-4]|1?[0-9])?[0-9]))/gi;
 
                             const ipv4Matches = candidate.match(ipv4Regex) || [];
                             const ipv6Matches = candidate.match(ipv6Regex) || [];
@@ -2657,46 +2660,66 @@
             });
         }
 
-        // Detect NAT type based on ICE candidates
+        // Analyze WebRTC candidates (simplified, focus on IP consistency)
         function detectNATType(candidates) {
             if (!candidates || candidates.length === 0) {
-                return 'Unknown';
+                return '无数据';
             }
 
-            let hasHost = false;
-            let hasSrflx = false;
+            let publicIPs = new Set();
+            let hasIPv6 = false;
             let hasRelay = false;
-            let hostIPs = new Set();
-            let srflxIPs = new Set();
+
+            // Extract public IPs from candidates
+            const ipv4Regex = /\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/g;
+            const ipv6Regex = /(?:(?:[a-f0-9]{1,4}:){7}[a-f0-9]{1,4}|(?:[a-f0-9]{1,4}:){1,7}:|(?:[a-f0-9]{1,4}:){1,6}:[a-f0-9]{1,4})/gi;
 
             candidates.forEach(candidate => {
-                if (candidate.includes('typ host')) {
-                    hasHost = true;
-                    const ipMatch = candidate.match(/([0-9]{1,3}(\.[0-9]{1,3}){3})/);
-                    if (ipMatch) hostIPs.add(ipMatch[0]);
-                }
-                if (candidate.includes('typ srflx')) {
-                    hasSrflx = true;
-                    const ipMatch = candidate.match(/([0-9]{1,3}(\.[0-9]{1,3}){3})/);
-                    if (ipMatch) srflxIPs.add(ipMatch[0]);
-                }
+                // Check for relay
                 if (candidate.includes('typ relay')) {
                     hasRelay = true;
                 }
+
+                // Extract IPs (skip private IPs)
+                const ipv4s = candidate.match(ipv4Regex) || [];
+                const ipv6s = candidate.match(ipv6Regex) || [];
+
+                ipv4s.forEach(ip => {
+                    if (!isPrivateIP(ip)) {
+                        publicIPs.add(ip);
+                    }
+                });
+
+                ipv6s.forEach(ip => {
+                    if (!isPrivateIP(ip)) {
+                        publicIPs.add(ip);
+                        hasIPv6 = true;
+                    }
+                });
             });
 
-            // Simplified NAT type detection
-            if (hasRelay) {
-                return 'Symmetric (Relay)';
-            } else if (hasSrflx && srflxIPs.size > 1) {
-                return 'Symmetric';
-            } else if (hasSrflx && hostIPs.size > 0) {
-                return 'Port Restricted Cone';
-            } else if (hasHost) {
-                return 'Full Cone or No NAT';
+            // Simplified description focusing on facts
+            const parts = [];
+
+            if (publicIPs.size === 0) {
+                return '未检测到公网 IP';
             }
 
-            return 'Port Restricted Cone or Symmetric';
+            if (publicIPs.size === 1) {
+                parts.push('单一公网 IP');
+            } else {
+                parts.push(`${publicIPs.size} 个不同公网 IP`);
+            }
+
+            if (hasIPv6) {
+                parts.push('含 IPv6');
+            }
+
+            if (hasRelay) {
+                parts.push('使用中继');
+            }
+
+            return parts.join(' / ');
         }
 
         // DNS leak detection - Enhanced to capture ALL DNS servers
