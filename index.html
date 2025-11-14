@@ -2283,6 +2283,33 @@
             return null;
         }
 
+        // Helper function to check if an IP is private/local (RFC1918)
+        function isPrivateIP(ip) {
+            if (!ip) return true;
+
+            // IPv4 private ranges
+            if (ip.startsWith('192.168.')) return true;  // 192.168.0.0/16
+            if (ip.startsWith('10.')) return true;       // 10.0.0.0/8
+            if (ip.startsWith('127.')) return true;      // 127.0.0.0/8 (loopback)
+            if (ip.startsWith('0.')) return true;        // 0.0.0.0/8
+            if (ip.startsWith('169.254.')) return true;  // 169.254.0.0/16 (link-local)
+
+            // 172.16.0.0 - 172.31.255.255 (172.16.0.0/12) - RFC1918
+            const parts = ip.split('.');
+            if (parts[0] === '172') {
+                const second = parseInt(parts[1], 10);
+                if (second >= 16 && second <= 31) return true;
+            }
+
+            // IPv6 private ranges
+            if (ip.startsWith('fe80:')) return true;  // Link-local
+            if (ip.startsWith('::1')) return true;    // Loopback
+            if (ip.startsWith('fc00:')) return true;  // Unique local
+            if (ip.startsWith('fd00:')) return true;  // Unique local
+
+            return false;
+        }
+
         // WebRTC-based DNS detection (similar to ipleak.net method)
         async function detectDNSviaWebRTC() {
             return new Promise((resolve) => {
@@ -2319,13 +2346,8 @@
 
                             if (ips) {
                                 ips.forEach(ip => {
-                                    // Filter out local IPs
-                                    if (!ip.startsWith('192.168.') &&
-                                        !ip.startsWith('10.') &&
-                                        !ip.startsWith('172.') &&
-                                        !ip.startsWith('127.') &&
-                                        !ip.startsWith('0.') &&
-                                        !dnsServers.find(s => s.ip === ip)) {
+                                    // Filter out private/local IPs (RFC1918)
+                                    if (!isPrivateIP(ip) && !dnsServers.find(s => s.ip === ip)) {
                                         dnsServers.push({
                                             ip: ip,
                                             geo: 'Unknown (WebRTC)',
@@ -2595,32 +2617,8 @@
 
                             if (ips && ips.length > 0) {
                                 for (const ip of ips) {
-                                    // Skip local IPs
-                                    if (!ip.startsWith('192.168.') &&
-                                        !ip.startsWith('10.') &&
-                                        !ip.startsWith('172.16.') &&
-                                        !ip.startsWith('172.17.') &&
-                                        !ip.startsWith('172.18.') &&
-                                        !ip.startsWith('172.19.') &&
-                                        !ip.startsWith('172.20.') &&
-                                        !ip.startsWith('172.21.') &&
-                                        !ip.startsWith('172.22.') &&
-                                        !ip.startsWith('172.23.') &&
-                                        !ip.startsWith('172.24.') &&
-                                        !ip.startsWith('172.25.') &&
-                                        !ip.startsWith('172.26.') &&
-                                        !ip.startsWith('172.27.') &&
-                                        !ip.startsWith('172.28.') &&
-                                        !ip.startsWith('172.29.') &&
-                                        !ip.startsWith('172.30.') &&
-                                        !ip.startsWith('172.31.') &&
-                                        !ip.startsWith('127.') &&
-                                        !ip.startsWith('0.') &&
-                                        !ip.startsWith('169.254.') &&
-                                        !ip.startsWith('fe80:') &&
-                                        !ip.startsWith('::1') &&
-                                        !ip.startsWith('fc00:') &&
-                                        !ip.startsWith('fd00:')) {
+                                    // Skip private/local IPs (RFC1918)
+                                    if (!isPrivateIP(ip)) {
                                         result.ip = ip;
                                         result.success = true;
                                     }
