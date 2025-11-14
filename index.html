@@ -2659,14 +2659,14 @@ var _hmt = _hmt || [];
                             resolve(result);
                         });
 
-                    // Timeout after 8 seconds
+                    // Timeout after 15 seconds (extended for slow connections)
                     setTimeout(() => {
                         if (result.candidates.length > 0) {
                             result.natType = detectNATType(result.candidates);
                         }
                         pc.close();
                         resolve(result);
-                    }, 8000);
+                    }, 15000);
 
                 } catch (error) {
                     console.log('WebRTC test error:', error);
