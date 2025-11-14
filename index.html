@@ -840,7 +840,7 @@
 
         <div class="webrtc-section">
             <div class="webrtc-title">WebRTC Leak Test</div>
-            <div class="dns-description" style="margin-bottom: 15px; color: #888;">本工具基于浏览器的 ICE 候选进行检测，结果仅供参考。</div>
+            <div class="dns-description" style="margin-bottom: 15px; color: #888;">This tool detects based on browser ICE candidates. Results are for reference only.</div>
             <div class="webrtc-grid" id="webrtcGrid">
             </div>
         </div>
@@ -2429,7 +2429,7 @@
                     <span class="webrtc-result-value">Detecting...</span>
                 </div>
                 <div class="webrtc-result-row">
-                    <span class="webrtc-result-label">网络信息:</span>
+                    <span class="webrtc-result-label">Network Info:</span>
                     <span class="webrtc-result-value">Detecting...</span>
                 </div>
                 <div class="webrtc-result-row">
@@ -2489,7 +2489,7 @@
                         <span class="webrtc-result-value">Detecting...</span>
                     </div>
                     <div class="webrtc-result-row">
-                        <span class="webrtc-result-label">网络信息:</span>
+                        <span class="webrtc-result-label">Network Info:</span>
                         <span class="webrtc-result-value">Detecting...</span>
                     </div>
                     <div class="webrtc-result-row">
@@ -2541,8 +2541,8 @@
                     resultValues[0].className = isLeak ? 'webrtc-result-value leak' : 'webrtc-result-value ip';
 
                     // Display network info with disclaimer
-                    const networkInfo = result.natType || '无数据';
-                    resultValues[1].textContent = `${networkInfo} (仅供参考)`;
+                    const networkInfo = result.natType || 'No data';
+                    resultValues[1].textContent = `${networkInfo} (for reference)`;
                     resultValues[1].className = 'webrtc-result-value nat';
 
                     const region = geoData ? `${geoData.country_name || 'Unknown'}` : 'Unknown';
@@ -2663,7 +2663,7 @@
         // Analyze WebRTC candidates (simplified, focus on IP consistency)
         function detectNATType(candidates) {
             if (!candidates || candidates.length === 0) {
-                return '无数据';
+                return 'No data';
             }
 
             let publicIPs = new Set();
@@ -2702,21 +2702,21 @@
             const parts = [];
 
             if (publicIPs.size === 0) {
-                return '未检测到公网 IP';
+                return 'No public IP detected';
             }
 
             if (publicIPs.size === 1) {
-                parts.push('单一公网 IP');
+                parts.push('Single public IP');
             } else {
-                parts.push(`${publicIPs.size} 个不同公网 IP`);
+                parts.push(`${publicIPs.size} different public IPs`);
             }
 
             if (hasIPv6) {
-                parts.push('含 IPv6');
+                parts.push('IPv6');
             }
 
             if (hasRelay) {
-                parts.push('使用中继');
+                parts.push('Relay');
             }
 
             return parts.join(' / ');
