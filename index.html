@@ -865,7 +865,10 @@
 
         <div class="connectivity-section">
             <div class="connectivity-title">Connectivity Test</div>
-            <div class="dns-description" style="margin-bottom: 15px; color: #888;">This tool only checks if your browser can access target websites. It cannot distinguish the cause of failure (website down, local network issues, ISP blocking, or firewall blocking will all show as "access failed").</div>
+            <div class="dns-description" style="margin-bottom: 15px; color: #888;">
+                This tool only checks if your browser can access target websites. It cannot distinguish the cause of failure (website down, local network issues, ISP blocking, or firewall blocking will all show as "access failed").<br>
+                <strong>Note:</strong> Latency here measures full resource load time (DNS + TLS + redirects + download). It is not the same as ICMP ping.
+            </div>
             <div class="connectivity-grid" id="connectivityGrid">
             </div>
         </div>
@@ -1953,6 +1956,24 @@
             });
         }
 
+        // Test connectivity with multiple samples to reduce network jitter
+        async function testConnectivityMulti(test, times = 3) {
+            const results = [];
+            for (let i = 0; i < times; i++) {
+                const r = await testConnectivity(test);
+                if (r.success && r.latency != null) {
+                    results.push(r.latency);
+                }
+            }
+
+            if (!results.length) {
+                return { success: false, latency: null };
+            }
+
+            const avg = Math.round(results.reduce((a, b) => a + b, 0) / results.length);
+            return { success: true, latency: avg };
+        }
+
         // Create connectivity test item
         function createConnectivityItem(test) {
             const item = document.createElement('div');
@@ -2031,7 +2052,7 @@
                     continue;
                 }
 
-                const result = await testConnectivity(test);
+                const result = await testConnectivityMulti(test);
 
                 if (result.success) {
                     item.classList.remove('testing');
@@ -2193,7 +2214,7 @@
                     <span class="spinner"></span> Testing...
                 `;
 
-                const result = await testConnectivity(test);
+                const result = await testConnectivityMulti(test);
 
                 if (result.success) {
                     item.classList.remove('testing');
