@@ -691,6 +691,52 @@
             overflow-y: auto;
         }
 
+        .collapsible-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            padding: 10px;
+            background: #f7fafc;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            transition: background 0.2s;
+        }
+
+        .collapsible-header:hover {
+            background: #edf2f7;
+        }
+
+        .collapsible-header .toggle-icon {
+            font-size: 0.8rem;
+            color: #667eea;
+        }
+
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .collapsible-content.expanded {
+            max-height: 2000px;
+        }
+
+        .privacy-notice {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            color: #4a5568;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .privacy-notice strong {
+            color: #667eea;
+        }
+
         .spinner {
             display: inline-block;
             width: 12px;
@@ -834,6 +880,7 @@
 
         <div class="connectivity-section">
             <div class="connectivity-title">Connectivity Test</div>
+            <div class="dns-description" style="margin-bottom: 15px; color: #888;">This tool only checks if your browser can access target websites. It cannot distinguish the cause of failure (website down, local network issues, ISP blocking, or firewall blocking will all show as "access failed").</div>
             <div class="connectivity-grid" id="connectivityGrid">
             </div>
         </div>
@@ -857,6 +904,10 @@
             </div>
             <div class="dns-servers" id="dnsServers">
             </div>
+        </div>
+
+        <div class="privacy-notice">
+            <strong>ℹ️ Privacy Notice:</strong> All browser and system information below is detected locally in your browser. Except for the public API requests listed above (IP detection, DNS leak test, and HTTP headers), this page does not collect or store your data.
         </div>
 
         <div class="info-section">
@@ -890,7 +941,8 @@
         </div>
 
         <div class="info-section">
-            <div class="info-title">HTTP Request Headers</div>
+            <div class="info-title">HTTP Request Headers (to httpbin.org)</div>
+            <div class="dns-description" style="margin-bottom: 15px; color: #888;">These are the headers sent by your browser when requesting httpbin.org/headers. They may differ slightly from headers sent when loading this page.</div>
             <div class="info-grid" id="httpHeaders">
             </div>
         </div>
@@ -1880,37 +1932,44 @@
             }
         ];
 
-        // Test connectivity to a URL
+        // Test connectivity to a URL using element loading
         async function testConnectivity(test) {
-            const startTime = performance.now();
+            return new Promise((resolve) => {
+                const startTime = performance.now();
+                let finished = false;
 
-            try {
-                const controller = new AbortController();
-                const timeout = setTimeout(() => controller.abort(), 10000);
+                // Use <script> for .js files, <img> for everything else
+                const element = test.url.endsWith('.js')
+                    ? document.createElement('script')
+                    : document.createElement('img');
 
-                const response = await fetch(test.url, {
-                    method: 'HEAD',
-                    mode: 'no-cors',
-                    cache: 'no-cache',
-                    signal: controller.signal
-                });
+                const cleanup = (success) => {
+                    if (finished) return;
+                    finished = true;
 
-                clearTimeout(timeout);
-                const endTime = performance.now();
-                const latency = Math.round(endTime - startTime);
+                    clearTimeout(timer);
+                    element.remove();
 
-                return { success: true, latency };
-            } catch (error) {
-                const endTime = performance.now();
-                const latency = Math.round(endTime - startTime);
+                    const latency = success ? Math.round(performance.now() - startTime) : null;
+                    resolve({ success, latency });
+                };
 
-                // Even with no-cors, if we get a response quickly, it's likely successful
-                if (latency < 10000) {
-                    return { success: true, latency };
-                }
+                // Timeout after 8 seconds
+                const timer = setTimeout(() => cleanup(false), 8000);
 
-                return { success: false, latency: null };
-            }
+                // Success: browser successfully loaded the resource
+                element.onload = () => cleanup(true);
+
+                // Failure: DNS/TCP/TLS/HTTP failure at any level
+                element.onerror = () => cleanup(false);
+
+                // Add cache-busting parameter
+                element.src = test.url + (test.url.includes('?') ? '&' : '?') + 't=' + Date.now();
+
+                // Insert into DOM (hidden)
+                element.style.display = 'none';
+                document.body.appendChild(element);
+            });
         }
 
         // Create connectivity test item
@@ -3084,12 +3143,18 @@
         function collectDetectedInfo() {
             const detectedInfoDiv = document.getElementById('detectedInfo');
 
+            // Map DNT values to human-readable text
+            let dntValue = 'Not sent';
+            if (navigator.doNotTrack === '1') {
+                dntValue = 'Enabled';
+            } else if (navigator.doNotTrack === '0') {
+                dntValue = 'Disabled';
+            }
+
             const info = [
                 { label: 'User Agent', value: navigator.userAgent || 'Unknown' },
-                { label: 'Accept Document Types', value: 'text/html, application/xhtml+xml, application/xml' },
                 { label: 'Accept Language', value: navigator.language || navigator.userLanguage || 'Unknown' },
-                { label: 'Accept Encoding', value: 'gzip, deflate, br' },
-                { label: 'Do Not Track', value: navigator.doNotTrack || 'Not set' }
+                { label: 'Do Not Track', value: dntValue }
             ];
 
             info.forEach(item => {
@@ -3107,16 +3172,22 @@
         function collectSystemInfo() {
             const systemInfoDiv = document.getElementById('systemInfo');
 
+            // Calculate UTC offset
+            const offset = new Date().getTimezoneOffset();
+            const hours = Math.floor(Math.abs(offset) / 60);
+            const minutes = Math.abs(offset) % 60;
+            const utcOffset = `UTC${offset <= 0 ? '+' : '-'}${hours}${minutes > 0 ? ':' + minutes : ''}`;
+
             const info = [
                 { label: 'Platform', value: navigator.platform || 'Unknown' },
-                { label: 'User Agent', value: navigator.userAgent || 'Unknown' },
                 { label: 'Cookies Enabled', value: navigator.cookieEnabled ? 'Yes' : 'No' },
-                { label: 'Java Enabled', value: navigator.javaEnabled ? navigator.javaEnabled() ? 'Yes' : 'No' : 'Unknown' },
-                { label: 'Online Status', value: navigator.onLine ? 'Online' : 'Offline' },
+                { label: 'Online Status', value: (navigator.onLine ? 'Online' : 'Offline') + ' (browser reported)' },
                 { label: 'Language', value: navigator.language || 'Unknown' },
                 { label: 'Languages', value: navigator.languages ? navigator.languages.join(', ') : 'Unknown' },
+                { label: 'Timezone', value: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Unknown' },
+                { label: 'UTC Offset', value: utcOffset },
                 { label: 'Hardware Concurrency', value: navigator.hardwareConcurrency || 'Unknown' },
-                { label: 'Device Memory', value: navigator.deviceMemory ? `${navigator.deviceMemory} GB` : 'Unknown' },
+                { label: 'Device Memory', value: navigator.deviceMemory ? `~${navigator.deviceMemory} GB (browser reported)` : 'Unknown' },
                 { label: 'Max Touch Points', value: navigator.maxTouchPoints || '0' }
             ];
 
@@ -3163,9 +3234,45 @@
 
             if (navigator.plugins && navigator.plugins.length > 0) {
                 const plugins = Array.from(navigator.plugins);
-                plugins.forEach((plugin, index) => {
+
+                // Filter out internal plugins and deduplicate by filename
+                const seen = new Set();
+                const filteredPlugins = plugins.filter(plugin => {
+                    const filename = plugin.filename || '';
+                    // Skip internal plugins
+                    if (filename.includes('internal-')) return false;
+                    // Deduplicate by filename
+                    if (seen.has(filename)) return false;
+                    seen.add(filename);
+                    return true;
+                });
+
+                if (filteredPlugins.length === 0) {
+                    pluginsInfoDiv.innerHTML = `
+                        <div class="info-item">
+                            <div class="info-item-label">No External Plugins Detected</div>
+                            <div class="info-item-value">Only internal browser plugins found (filtered out)</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Create collapsible header
+                const header = document.createElement('div');
+                header.className = 'collapsible-header';
+                header.innerHTML = `
+                    <span>Detected ${filteredPlugins.length} plugin(s) (click to expand)</span>
+                    <span class="toggle-icon">▼</span>
+                `;
+
+                // Create collapsible content
+                const content = document.createElement('div');
+                content.className = 'collapsible-content';
+
+                filteredPlugins.forEach((plugin, index) => {
                     const pluginDiv = document.createElement('div');
                     pluginDiv.className = 'info-item';
+                    pluginDiv.style.marginBottom = '10px';
                     pluginDiv.innerHTML = `
                         <div class="info-item-label">Plugin ${index + 1}: ${plugin.name}</div>
                         <div class="info-item-value">
@@ -3173,8 +3280,18 @@
                             <small>Filename: ${plugin.filename || 'Unknown'}</small>
                         </div>
                     `;
-                    pluginsInfoDiv.appendChild(pluginDiv);
+                    content.appendChild(pluginDiv);
                 });
+
+                // Toggle function
+                header.addEventListener('click', () => {
+                    content.classList.toggle('expanded');
+                    const icon = header.querySelector('.toggle-icon');
+                    icon.textContent = content.classList.contains('expanded') ? '▲' : '▼';
+                });
+
+                pluginsInfoDiv.appendChild(header);
+                pluginsInfoDiv.appendChild(content);
             } else {
                 pluginsInfoDiv.innerHTML = `
                     <div class="info-item">
@@ -3191,9 +3308,25 @@
 
             if (navigator.mimeTypes && navigator.mimeTypes.length > 0) {
                 const mimeTypes = Array.from(navigator.mimeTypes);
-                mimeTypes.forEach((mimeType, index) => {
+                const totalCount = mimeTypes.length;
+                const displayLimit = 10;
+
+                // Create collapsible header
+                const header = document.createElement('div');
+                header.className = 'collapsible-header';
+                header.innerHTML = `
+                    <span>Detected ${totalCount} MIME type(s) (click to expand, showing first ${Math.min(displayLimit, totalCount)})</span>
+                    <span class="toggle-icon">▼</span>
+                `;
+
+                // Create collapsible content
+                const content = document.createElement('div');
+                content.className = 'collapsible-content';
+
+                mimeTypes.slice(0, displayLimit).forEach((mimeType, index) => {
                     const mimeDiv = document.createElement('div');
                     mimeDiv.className = 'info-item';
+                    mimeDiv.style.marginBottom = '10px';
                     mimeDiv.innerHTML = `
                         <div class="info-item-label">${index + 1}. ${mimeType.type}</div>
                         <div class="info-item-value">
@@ -3201,8 +3334,31 @@
                             <small>Suffixes: ${mimeType.suffixes || 'None'}</small>
                         </div>
                     `;
-                    mimeTypesInfoDiv.appendChild(mimeDiv);
+                    content.appendChild(mimeDiv);
                 });
+
+                if (totalCount > displayLimit) {
+                    const moreInfo = document.createElement('div');
+                    moreInfo.className = 'info-item';
+                    moreInfo.style.marginTop = '10px';
+                    moreInfo.style.background = '#edf2f7';
+                    moreInfo.innerHTML = `
+                        <div class="info-item-value" style="text-align: center; color: #667eea;">
+                            ... and ${totalCount - displayLimit} more
+                        </div>
+                    `;
+                    content.appendChild(moreInfo);
+                }
+
+                // Toggle function
+                header.addEventListener('click', () => {
+                    content.classList.toggle('expanded');
+                    const icon = header.querySelector('.toggle-icon');
+                    icon.textContent = content.classList.contains('expanded') ? '▲' : '▼';
+                });
+
+                mimeTypesInfoDiv.appendChild(header);
+                mimeTypesInfoDiv.appendChild(content);
             } else {
                 mimeTypesInfoDiv.innerHTML = `
                     <div class="info-item">
@@ -3238,8 +3394,10 @@
             } catch (error) {
                 httpHeadersDiv.innerHTML = `
                     <div class="info-item">
-                        <div class="info-item-label">Headers Detection Failed</div>
-                        <div class="info-item-value">Unable to retrieve HTTP request headers</div>
+                        <div class="info-item-label">Unable to Retrieve Headers from httpbin.org</div>
+                        <div class="info-item-value">
+                            Network may be restricted or blocked. This is an external dependency and does not affect IP/WebRTC/DNS tests above.
+                        </div>
                     </div>
                 `;
             }
