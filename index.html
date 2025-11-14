@@ -2631,12 +2631,12 @@
                     const badge = item.querySelector('.webrtc-status-badge');
                     if (badge) {
                         badge.className = 'webrtc-status-badge failed';
-                        badge.textContent = '✗ Error';
+                        badge.textContent = '✗ Failed';
                     }
 
                     const resultValues = item.querySelectorAll('.webrtc-result-value');
                     if (resultValues.length >= 3) {
-                        resultValues[0].textContent = 'Error';
+                        resultValues[0].textContent = 'Failed';
                         resultValues[1].textContent = 'N/A';
                         resultValues[2].textContent = 'N/A';
                     }
