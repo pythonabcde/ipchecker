@@ -904,7 +904,7 @@
                 flag: '🌍',
                 country: 'US',
                 url: 'https://api.seeip.org/jsonip',
-                parser: data => data.ip
+                parser: data => data?.ip || null
             },
             {
                 name: 'cloudflare',
@@ -922,7 +922,7 @@
                 flag: '🌍',
                 country: 'US',
                 url: 'https://checkip.amazonaws.com/',
-                parser: data => data.trim(),
+                parser: data => (typeof data === 'string' ? data.trim() : null),
                 isText: true
             },
             {
@@ -930,7 +930,7 @@
                 flag: '🌍',
                 country: 'US',
                 url: 'https://ipecho.net/plain',
-                parser: data => data.trim(),
+                parser: data => (typeof data === 'string' ? data.trim() : null),
                 isText: true
             },
             {
@@ -938,7 +938,7 @@
                 flag: '🌍',
                 country: 'US',
                 url: 'https://v4.ident.me',
-                parser: data => data.trim(),
+                parser: data => (typeof data === 'string' ? data.trim() : null),
                 isText: true
             },
             {
@@ -946,7 +946,7 @@
                 flag: '🌍',
                 country: 'US',
                 url: 'https://ipv4.icanhazip.com',
-                parser: data => data.trim(),
+                parser: data => (typeof data === 'string' ? data.trim() : null),
                 isText: true
             },
             {
@@ -954,14 +954,14 @@
                 flag: '🌍',
                 country: 'US',
                 url: 'https://wtfismyip.com/json',
-                parser: data => data.YourFuckingIPAddress
+                parser: data => data?.YourFuckingIPAddress || data?.ip || null
             },
             {
                 name: 'ifconfig.me',
                 flag: '🌍',
                 country: 'US',
                 url: 'https://ifconfig.me/ip',
-                parser: data => data.trim(),
+                parser: data => (typeof data === 'string' ? data.trim() : null),
                 isText: true
             },
             {
@@ -969,21 +969,24 @@
                 flag: '🌍',
                 country: 'US',
                 url: 'https://ipinfo.io/json',
-                parser: data => data.ip
+                parser: data => data?.ip || null
             },
             {
                 name: 'httpbin',
                 flag: '🌍',
                 country: 'US',
                 url: 'https://httpbin.org/ip',
-                parser: data => data.origin?.split(',')[0].trim()
+                parser: data => {
+                    const ip = data?.origin?.split(',')[0];
+                    return ip ? ip.trim() : null;
+                }
             },
             {
                 name: 'tnedi.me',
                 flag: '🌍',
                 country: 'US',
                 url: 'https://tnedi.me',
-                parser: data => data.trim(),
+                parser: data => (typeof data === 'string' ? data.trim() : null),
                 isText: true
             },
             {
@@ -991,7 +994,7 @@
                 flag: '🌍',
                 country: 'US',
                 url: 'https://api.ipify.org?format=json',
-                parser: data => data.ip
+                parser: data => data?.ip || null
             },
             // Chinese sources
             {
@@ -999,7 +1002,7 @@
                 flag: '🌍',
                 country: 'CN',
                 url: 'https://api.ip.sb/ip',
-                parser: data => data.trim(),
+                parser: data => (typeof data === 'string' ? data.trim() : null),
                 isText: true
             },
             {
@@ -1007,13 +1010,13 @@
                 flag: '🌍',
                 country: 'CN',
                 url: 'https://api.ip.sb/geoip',
-                parser: data => ({
-                    ip: data.ip,
+                parser: data => data ? ({
+                    ip: data.ip || null,
                     location: data.country && data.city ? `${data.country} ${data.region || ''} ${data.city}`.trim() : null,
                     isp: data.isp || data.organization || '',
                     asn: data.asn || '',
                     country_code: data.country_code || ''
-                }),
+                }) : null,
                 hasLocation: true
             },
             {
@@ -1028,7 +1031,7 @@
                 flag: '🌍',
                 country: 'CN',
                 url: 'https://api.myip.la/en?json',
-                parser: data => data.ip
+                parser: data => data?.ip || null
             },
             {
                 name: 'cz88.net',
@@ -1039,8 +1042,8 @@
             }
         ];
 
-        console.log('=== SCRIPT LOADED ===');
-        console.log('IP Checkers configured:', ipCheckers.length);
+        // console.log('=== SCRIPT LOADED ===');
+        // console.log('IP Checkers configured:', ipCheckers.length);
 
         let successCount = 0;
         let failCount = 0;
@@ -1213,13 +1216,13 @@
                             const data = await response.json();
                             const locationData = service.parser(data);
                             if (locationData && locationData.location) {
-                                console.log(`Got location from ${service.name} for ${ip} (attempt ${attempt})`);
+                                // console.log(`Got location from ${service.name} for ${ip} (attempt ${attempt})`);
                                 locationDataCache[ip] = locationData;
                                 return locationData;
                             }
                         }
                     } catch (error) {
-                        console.log(`${service.name} attempt ${attempt} failed for ${ip}:`, error.message);
+                        // console.log(`${service.name} attempt ${attempt} failed for ${ip}:`, error.message);
                         if (attempt === 2) {
                             // Only move to next service after 2 attempts
                             continue;
@@ -1230,7 +1233,7 @@
                 }
             }
 
-            console.log(`All geolocation APIs failed for ${ip}`);
+            // console.log(`All geolocation APIs failed for ${ip}`);
             return { location: '-', isp: '', asn: '', country_code: '' };
         }
 
@@ -1239,7 +1242,7 @@
             const tbody = document.getElementById('checksTableBody');
             const uniqueIPCount = Object.keys(ipCheckResults).length;
 
-            console.log(`Reordering table: ${uniqueIPCount} unique IP(s) detected`);
+            // console.log(`Reordering table: ${uniqueIPCount} unique IP(s) detected`);
 
             // Group checkers by IP
             const ipGroups = {};
@@ -1369,7 +1372,7 @@
                 });
             }
 
-            console.log(`Table reordered: ${uniqueIPRows.length} unique (CN first), ${duplicateIPRows.length} duplicates (grouped by IP and country)`);
+            // console.log(`Table reordered: ${uniqueIPRows.length} unique (CN first), ${duplicateIPRows.length} duplicates (grouped by IP and country)`);
         }
 
         // Batch query locations for all unique IPs
@@ -1377,8 +1380,8 @@
             if (allChecksComplete) return; // Prevent duplicate calls
             allChecksComplete = true;
 
-            console.log('All IP checks complete. Starting batch location query...');
-            console.log(`Found ${Object.keys(ipCheckResults).length} unique IP(s) from ${totalCount} sources`);
+            // console.log('All IP checks complete. Starting batch location query...');
+            // console.log(`Found ${Object.keys(ipCheckResults).length} unique IP(s) from ${totalCount} sources`);
 
             // Process mostCommonIP first to get country code ASAP for connectivity tests
             const ips = Object.keys(ipCheckResults);
@@ -1401,7 +1404,7 @@
 
                 // Only query API if at least one field is missing
                 if (needsLocation || needsISP || needsASN) {
-                    console.log(`Querying location for IP: ${ip} (used by ${data.checkers.length} source(s))`);
+                    // console.log(`Querying location for IP: ${ip} (used by ${data.checkers.length} source(s))`);
                     apiLocationData = await getIPLocation(ip);
                 }
 
@@ -1413,7 +1416,7 @@
                     country_code: (locationData && locationData.country_code) || apiLocationData.country_code || ''
                 };
 
-                console.log(`[batchQueryLocations] IP ${ip} - country_code: ${finalLocationData.country_code}, isMostCommon: ${ip === mostCommonIP}`);
+                // console.log(`[batchQueryLocations] IP ${ip} - country_code: ${finalLocationData.country_code}, isMostCommon: ${ip === mostCommonIP}`);
 
                 // Store country_code in ipCheckResults for sorting
                 ipCheckResults[ip].country_code = finalLocationData.country_code;
@@ -1422,10 +1425,10 @@
                 // Don't trigger test here, let periodic check handle it
                 if (!userCountryCode && ip === mostCommonIP && finalLocationData.country_code) {
                     userCountryCode = finalLocationData.country_code;
-                    console.log(`[batchQueryLocations] Set userCountryCode to ${userCountryCode} from most common IP`);
+                    // console.log(`[batchQueryLocations] Set userCountryCode to ${userCountryCode} from most common IP`);
                     // Note: Periodic check will handle YouTube/Google tests and WebRTC Nextcloud->Google replacement
                 } else if (ip === mostCommonIP) {
-                    console.log(`[batchQueryLocations] mostCommonIP detected but not setting userCountryCode: userCountryCode=${userCountryCode}, country_code=${finalLocationData.country_code}`);
+                    // console.log(`[batchQueryLocations] mostCommonIP detected but not setting userCountryCode: userCountryCode=${userCountryCode}, country_code=${finalLocationData.country_code}`);
                 }
 
                 // Update all rows that use this IP
@@ -1455,7 +1458,7 @@
                 });
             }
 
-            console.log('Batch location query complete!');
+            // console.log('Batch location query complete!');
 
             // Reorder table to show unique IPs first
             reorderTableRows();
@@ -1479,7 +1482,7 @@
 
             // Check if all IP checks are complete
             if (successCount + failCount === totalCount && !allChecksComplete) {
-                console.log(`All ${totalCount} IP checks complete (${successCount} success, ${failCount} failed)`);
+                // console.log(`All ${totalCount} IP checks complete (${successCount} success, ${failCount} failed)`);
                 // Trigger batch location query
                 batchQueryLocations();
             }
@@ -1517,7 +1520,7 @@
         async function updateIPSummary(ip) {
             if (!ip) return;
 
-            console.log(`[updateIPSummary] Called with IP: ${ip}`);
+            // console.log(`[updateIPSummary] Called with IP: ${ip}`);
 
             // Update IP immediately
             const summaryIPEl = document.getElementById('summaryIP');
@@ -1653,24 +1656,24 @@
             // Try each API until we get valid data
             for (const api of apis) {
                 try {
-                    console.log(`[updateIPSummary] Trying API: ${api.name}`);
+                    // console.log(`[updateIPSummary] Trying API: ${api.name}`);
                     const data = await api.fetch();
                     const parsed = api.parse(data);
 
                     if (parsed) {
-                        console.log(`[updateIPSummary] Successfully got IP info from ${api.name}`, parsed);
+                        // console.log(`[updateIPSummary] Successfully got IP info from ${api.name}`, parsed);
 
                         updateField('summaryISP', parsed.isp);
                         updateField('summaryASN', parsed.asn);
 
                         // Store country code for connectivity tests
                         // Don't trigger test here, let periodic check handle it
-                        console.log(`[updateIPSummary] parsed.countryCode = ${parsed.countryCode}`);
+                        // console.log(`[updateIPSummary] parsed.countryCode = ${parsed.countryCode}`);
                         if (parsed.countryCode) {
                             userCountryCode = parsed.countryCode.toUpperCase();
-                            console.log(`[updateIPSummary] Set userCountryCode to ${userCountryCode}`);
+                            // console.log(`[updateIPSummary] Set userCountryCode to ${userCountryCode}`);
                         } else {
-                            console.log(`[updateIPSummary] WARNING: parsed.countryCode is empty!`);
+                            // console.log(`[updateIPSummary] WARNING: parsed.countryCode is empty!`);
                         }
 
                         // Display country with flag image
@@ -1699,13 +1702,13 @@
                         return; // Success, exit
                     }
                 } catch (error) {
-                    console.log(`${api.name} failed:`, error);
+                    // console.log(`${api.name} failed:`, error);
                     continue;
                 }
             }
 
             // If all APIs fail, set default values
-            console.log('All IP info APIs failed');
+            // console.log('All IP info APIs failed');
             ['summaryISP', 'summaryASN', 'summaryCountry', 'summaryRegion', 'summaryCity', 'summaryTimezone', 'summaryLatLon'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el && el.classList.contains('loading')) {
@@ -1794,8 +1797,8 @@
 
         // Initialize
         function init() {
-            console.log('=== IP CHECKER INITIALIZED ===');
-            console.log('Page loaded and init() called');
+            // console.log('=== IP CHECKER INITIALIZED ===');
+            // console.log('Page loaded and init() called');
 
             const tbody = document.getElementById('checksTableBody');
 
@@ -2267,12 +2270,12 @@
                         const data = await response.json();
                         const result = api.parse(data);
                         if (result) {
-                            console.log(`Got DNS geo info from ${api.name} for ${ip}`);
+                            // console.log(`Got DNS geo info from ${api.name} for ${ip}`);
                             return result;
                         }
                     }
                 } catch (error) {
-                    console.log(`${api.name} failed for DNS ${ip}:`, error);
+                    // console.log(`${api.name} failed for DNS ${ip}:`, error);
                     continue;
                 }
             }
@@ -2337,7 +2340,7 @@
                     // Create offer
                     pc.createOffer()
                         .then(offer => pc.setLocalDescription(offer))
-                        .catch(err => console.log('WebRTC offer error:', err));
+                        .catch(err => // console.log('WebRTC offer error:', err));
 
                     // Wait for ICE gathering
                     setTimeout(() => {
@@ -2346,7 +2349,7 @@
                     }, 5000);
 
                 } catch (error) {
-                    console.log('WebRTC DNS detection error:', error);
+                    // console.log('WebRTC DNS detection error:', error);
                     resolve([]);
                 }
             });
@@ -2356,26 +2359,26 @@
         async function replaceEkigaWithGoogle() {
             // Prevent duplicate replacement
             if (webrtcEkigaReplacementDone) {
-                console.log('WebRTC Nextcloud->Google replacement already done, skipping');
+                // console.log('WebRTC Nextcloud->Google replacement already done, skipping');
                 return;
             }
 
             // Only replace if country code is available and NOT China
             if (!userCountryCode) {
-                console.log('Country code not yet detected, skipping WebRTC replacement');
+                // console.log('Country code not yet detected, skipping WebRTC replacement');
                 return;
             }
 
             if (userCountryCode === 'CN') {
-                console.log('Chinese IP detected, keeping Nextcloud server');
+                // console.log('Chinese IP detected, keeping Nextcloud server');
                 return;
             }
 
-            console.log('=== Replacing Nextcloud with Google ===');
+            // console.log('=== Replacing Nextcloud with Google ===');
             const nextcloudItem = document.getElementById('webrtc-nextcloud');
 
             if (!nextcloudItem) {
-                console.log('Nextcloud test not found, skipping replacement');
+                // console.log('Nextcloud test not found, skipping replacement');
                 return;
             }
 
@@ -2413,13 +2416,13 @@
             `;
 
             // Run Google test
-            console.log('Starting Google STUN test to replace Nextcloud');
+            // console.log('Starting Google STUN test to replace Nextcloud');
             await testSingleSTUNServer(googleServer);
         }
 
         // WebRTC Leak Test - Test multiple STUN servers with NAT type detection
         async function testWebRTCLeak() {
-            console.log('=== WebRTC Leak Test Starting ===');
+            // console.log('=== WebRTC Leak Test Starting ===');
             const webrtcGrid = document.getElementById('webrtcGrid');
 
             if (!webrtcGrid) {
@@ -2427,12 +2430,12 @@
                 return;
             }
 
-            console.log('WebRTC grid element found, creating tests...');
+            // console.log('WebRTC grid element found, creating tests...');
 
             // STUN servers to test - Always start with safe servers (Nextcloud instead of Google)
             // Will dynamically switch Nextcloud to Google if non-Chinese IP is detected
-            console.log(`WebRTC test starting, userCountryCode: ${userCountryCode || 'not yet detected'}`);
-            console.log('Defaulting to safe servers (Nextcloud) - will be replaced by Google for international users');
+            // console.log(`WebRTC test starting, userCountryCode: ${userCountryCode || 'not yet detected'}`);
+            // console.log('Defaulting to safe servers (Nextcloud) - will be replaced by Google for international users');
 
             // Always start with Nextcloud (safe for Chinese users)
             // Will be dynamically replaced with Google for non-Chinese users
@@ -2443,7 +2446,7 @@
                 { name: 'Nextcloud', url: 'stun:stun.nextcloud.com:443', icon: '🌐' }
             ];
 
-            console.log('Testing', stunServers.length, 'STUN servers');
+            // console.log('Testing', stunServers.length, 'STUN servers');
 
             // Create initial UI for each STUN server
             stunServers.forEach(server => {
@@ -2478,7 +2481,7 @@
             try {
                 const testPromises = stunServers.map(server => testSingleSTUNServer(server));
                 await Promise.all(testPromises);
-                console.log('=== WebRTC Leak Test Completed ===');
+                // console.log('=== WebRTC Leak Test Completed ===');
             } catch (error) {
                 console.error('Error during WebRTC tests:', error);
             }
@@ -2493,7 +2496,7 @@
                 const result = await performWebRTCTest(server.url);
 
                 if (result.success && result.ip) {
-                    console.log(`${server.name}: Detected IP ${result.ip}`);
+                    // console.log(`${server.name}: Detected IP ${result.ip}`);
 
                     // Get geolocation for the detected IP (use existing function)
                     const geoData = await getDNSServerGeoLocation(result.ip);
@@ -2635,7 +2638,7 @@
                     pc.createOffer()
                         .then(offer => pc.setLocalDescription(offer))
                         .catch(err => {
-                            console.log('WebRTC offer error:', err);
+                            // console.log('WebRTC offer error:', err);
                             pc.close();
                             resolve(result);
                         });
@@ -2650,7 +2653,7 @@
                     }, 15000);
 
                 } catch (error) {
-                    console.log('WebRTC test error:', error);
+                    // console.log('WebRTC test error:', error);
                     resolve({ success: false, ip: null, natType: null, candidates: [] });
                 }
             });
@@ -2714,7 +2717,7 @@
 
                 // For Chinese users, skip potentially blocked services
                 const isChinaUser = (userCountryCode === 'CN');
-                console.log(`DNS leak detection - China user: ${isChinaUser}`);
+                // console.log(`DNS leak detection - China user: ${isChinaUser}`);
 
                 // Service 1: bash.ws (most comprehensive) - AGGRESSIVE MODE
                 // Skip for Chinese users (may be blocked)
@@ -2849,10 +2852,10 @@
 
                                 // If we found servers and it's not the first attempt, we can continue checking
                                 if (bashServers.length > 0) {
-                                    console.log(`bash.ws attempt ${attempt + 1}: found ${bashServers.length} DNS server(s)`);
+                                    // console.log(`bash.ws attempt ${attempt + 1}: found ${bashServers.length} DNS server(s)`);
                                 }
                             } catch (e) {
-                                console.log(`bash.ws attempt ${attempt + 1} failed:`, e);
+                                // console.log(`bash.ws attempt ${attempt + 1} failed:`, e);
                             }
 
                             // Wait longer between attempts
@@ -2861,7 +2864,7 @@
 
                         return bashServers;
                     } catch (e) {
-                        console.log('bash.ws failed:', e);
+                        // console.log('bash.ws failed:', e);
                         return [];
                     }
                 })());
@@ -2886,7 +2889,7 @@
                         // Note: dnsleaktest.org doesn't have a public API, so this is best effort
                         return servers;
                     } catch (e) {
-                        console.log('dnsleaktest.org failed:', e);
+                        // console.log('dnsleaktest.org failed:', e);
                         return [];
                     }
                 })());
@@ -2911,7 +2914,7 @@
                         }
                         return [];
                     } catch (e) {
-                        console.log('edns.ip-api.com failed:', e);
+                        // console.log('edns.ip-api.com failed:', e);
                         return [];
                     }
                 })());
@@ -2962,12 +2965,12 @@
                                 }
                             }
                         } catch (e) {
-                            console.log('ipleak.net API query failed:', e);
+                            // console.log('ipleak.net API query failed:', e);
                         }
 
                         return servers;
                     } catch (e) {
-                        console.log('ipleak.net failed:', e);
+                        // console.log('ipleak.net failed:', e);
                         return [];
                     }
                 })());
@@ -2990,7 +2993,7 @@
                         await new Promise(resolve => setTimeout(resolve, 3000));
                         return servers;
                     } catch (e) {
-                        console.log('whoer.net failed:', e);
+                        // console.log('whoer.net failed:', e);
                         return [];
                     }
                 })());
@@ -3004,7 +3007,7 @@
                     servers.forEach(server => {
                         // Skip if this IP is the user's public IP (not a DNS server)
                         if (server.ip === mostCommonIP) {
-                            console.log(`Filtering out user's public IP: ${server.ip}`);
+                            // console.log(`Filtering out user's public IP: ${server.ip}`);
                             return;
                         }
                         if (!allDnsServers.find(s => s.ip === server.ip)) {
@@ -3044,7 +3047,7 @@
                                     server.isp = geoData.isp || server.isp;
                                 }
                             } catch (e) {
-                                console.log(`Failed to get location for DNS ${server.ip}:`, e);
+                                // console.log(`Failed to get location for DNS ${server.ip}:`, e);
                             }
                         }
                     }
