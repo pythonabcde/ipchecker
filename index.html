@@ -2340,7 +2340,7 @@
                     // Create offer
                     pc.createOffer()
                         .then(offer => pc.setLocalDescription(offer))
-                        .catch(err => // console.log('WebRTC offer error:', err));
+                        .catch(err => {/* Error ignored */});
 
                     // Wait for ICE gathering
                     setTimeout(() => {
