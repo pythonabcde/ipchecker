@@ -660,6 +660,28 @@
             border-bottom: 2px solid #e2e8f0;
         }
 
+        /* HTTP Headers section - more understated styling */
+        .http-headers-section {
+            opacity: 0.85;
+        }
+
+        .http-headers-section .info-title {
+            font-size: 1.05rem;
+            font-weight: 500;
+            color: #a0aec0;
+        }
+
+        .http-headers-section .info-grid {
+            font-size: 0.9rem;
+        }
+
+        .http-headers-error {
+            color: #a0aec0;
+            font-size: 0.9rem;
+            padding: 10px 0;
+            text-align: left;
+        }
+
         .info-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -932,9 +954,9 @@
             </div>
         </div>
 
-        <div class="info-section">
+        <div class="info-section http-headers-section">
             <div class="info-title">HTTP Request Headers (to httpbin.org)</div>
-            <div class="dns-description" style="margin-bottom: 15px; color: #888;">These are the headers sent by your browser when requesting httpbin.org/headers. They may differ slightly from headers sent when loading this page.</div>
+            <div class="dns-description" style="margin-bottom: 15px; color: #a0aec0;">This section uses a third-party service (httpbin.org) to echo your HTTP request headers. If the service is blocked or unreachable from your network, this section may not display any results.</div>
             <div class="info-grid" id="httpHeaders">
             </div>
         </div>
@@ -3404,11 +3426,8 @@
                 }
             } catch (error) {
                 httpHeadersDiv.innerHTML = `
-                    <div class="info-item">
-                        <div class="info-item-label">Unable to Retrieve Headers from httpbin.org</div>
-                        <div class="info-item-value">
-                            Network may be restricted or blocked (firewall / corporate proxy / regional block). This is an external dependency and does not affect IP/WebRTC/DNS tests above.
-                        </div>
+                    <div class="http-headers-error">
+                        Could not reach httpbin.org from your network. This test is optional and does not affect the other results above.
                     </div>
                 `;
             }
