@@ -894,7 +894,7 @@
 
         <div class="dns-section">
             <div class="dns-title">DNS Leak Test</div>
-            <div class="dns-description">Detect whether DNS queries go through VPN/proxy instead of local ISP</div>
+            <div class="dns-description">Detects DNS servers based on public services and geolocation data. Results are best-effort estimates and cannot 100% confirm DNS "leaks".</div>
             <div class="dns-status checking" id="dnsStatus">
                 <div class="dns-status-icon">🔍</div>
                 <div class="dns-status-text">
@@ -1871,10 +1871,10 @@
         // Connectivity test configuration
         const connectivityTests = [
             {
-                name: 'ByteDance',
-                url: 'https://lf1-cdn-tos.bytegoofy.com/obj/iconpark/logo.c505d01c1db6fc5c4b2b9f4c4f3f1fd0.svg',
+                name: 'Baidu',
+                url: 'https://www.baidu.com/favicon.ico',
                 type: 'china',
-                icon: 'https://www.bytedance.com/favicon.ico'
+                icon: 'https://www.baidu.com/favicon.ico'
             },
             {
                 name: 'Bilibili',
@@ -3153,7 +3153,7 @@
 
             const info = [
                 { label: 'User Agent', value: navigator.userAgent || 'Unknown' },
-                { label: 'Accept Language', value: navigator.language || navigator.userLanguage || 'Unknown' },
+                { label: 'Preferred Language', value: navigator.language || navigator.userLanguage || 'Unknown' },
                 { label: 'Do Not Track', value: dntValue }
             ];
 
@@ -3172,11 +3172,12 @@
         function collectSystemInfo() {
             const systemInfoDiv = document.getElementById('systemInfo');
 
-            // Calculate UTC offset
+            // Calculate UTC offset in standard format (e.g., UTC+08:00)
             const offset = new Date().getTimezoneOffset();
-            const hours = Math.floor(Math.abs(offset) / 60);
-            const minutes = Math.abs(offset) % 60;
-            const utcOffset = `UTC${offset <= 0 ? '+' : '-'}${hours}${minutes > 0 ? ':' + minutes : ''}`;
+            const sign = offset <= 0 ? '+' : '-';
+            const hours = String(Math.floor(Math.abs(offset) / 60)).padStart(2, '0');
+            const minutes = String(Math.abs(offset) % 60).padStart(2, '0');
+            const utcOffset = `UTC${sign}${hours}:${minutes}`;
 
             const info = [
                 { label: 'Platform', value: navigator.platform || 'Unknown' },
@@ -3296,7 +3297,7 @@
                 pluginsInfoDiv.innerHTML = `
                     <div class="info-item">
                         <div class="info-item-label">No Plugins Detected</div>
-                        <div class="info-item-value">Modern browsers may restrict plugin detection for privacy reasons</div>
+                        <div class="info-item-value">Modern browsers may restrict plugin detection for privacy reasons. This is normal behavior on many browsers/systems and does not indicate an issue.</div>
                     </div>
                 `;
             }
@@ -3363,7 +3364,7 @@
                 mimeTypesInfoDiv.innerHTML = `
                     <div class="info-item">
                         <div class="info-item-label">No MIME Types Detected</div>
-                        <div class="info-item-value">Modern browsers may restrict MIME type detection for privacy reasons</div>
+                        <div class="info-item-value">Modern browsers may restrict MIME type detection for privacy reasons. This is normal behavior on many browsers/systems and does not indicate an issue.</div>
                     </div>
                 `;
             }
@@ -3396,7 +3397,7 @@
                     <div class="info-item">
                         <div class="info-item-label">Unable to Retrieve Headers from httpbin.org</div>
                         <div class="info-item-value">
-                            Network may be restricted or blocked. This is an external dependency and does not affect IP/WebRTC/DNS tests above.
+                            Network may be restricted or blocked (firewall / corporate proxy / regional block). This is an external dependency and does not affect IP/WebRTC/DNS tests above.
                         </div>
                     </div>
                 `;
