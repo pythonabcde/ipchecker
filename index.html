@@ -902,8 +902,8 @@
             <div class="dns-status checking" id="dnsStatus">
                 <div class="dns-status-icon">🔍</div>
                 <div class="dns-status-text">
-                    <div class="dns-status-title">Checking DNS...</div>
-                    <div class="dns-status-desc">Detecting your DNS servers</div>
+                    <div class="dns-status-title" id="dnsStatusTitle">Checking DNS...</div>
+                    <div class="dns-status-desc" id="dnsStatusDesc">Detecting your DNS servers</div>
                 </div>
             </div>
             <div class="dns-servers" id="dnsServers">
@@ -1022,6 +1022,12 @@
                 preferredLanguage: 'Preferred Language',
                 utcOffset: 'UTC Offset',
                 timezoneLocation: 'Timezone',
+                checking: 'Checking...',
+                notTested: 'Not tested',
+                notTestedChina: 'Not tested (CHINA)',
+                networkInfo: 'Network Info',
+                notDetected: 'Not detected',
+                na: 'N/A',
             },
             'zh-CN': {
                 title: 'IP地址检测工具',
@@ -1094,6 +1100,12 @@
                 preferredLanguage: '首选语言',
                 utcOffset: 'UTC偏移',
                 timezoneLocation: '时区',
+                checking: '检查中...',
+                notTested: '未测试',
+                notTestedChina: '未测试（中国）',
+                networkInfo: '网络信息',
+                notDetected: '未检测到',
+                na: '不适用',
             },
             'zh-TW': {
                 title: 'IP位址檢測工具',
@@ -1166,6 +1178,12 @@
                 preferredLanguage: '偏好語言',
                 utcOffset: 'UTC偏移',
                 timezoneLocation: '時區',
+                checking: '檢查中...',
+                notTested: '未測試',
+                notTestedChina: '未測試（中國）',
+                networkInfo: '網路資訊',
+                notDetected: '未檢測到',
+                na: '不適用',
             },
             'ja': {
                 title: 'IPアドレスチェッカー',
@@ -1238,6 +1256,12 @@
                 preferredLanguage: '優先言語',
                 utcOffset: 'UTCオフセット',
                 timezoneLocation: 'タイムゾーン',
+                checking: '確認中...',
+                notTested: 'テストされていません',
+                notTestedChina: 'テストされていません（中国）',
+                networkInfo: 'ネットワーク情報',
+                notDetected: '検出されませんでした',
+                na: '該当なし',
             },
             'ko': {
                 title: 'IP 주소 확인 도구',
@@ -1310,6 +1334,12 @@
                 preferredLanguage: '선호 언어',
                 utcOffset: 'UTC 오프셋',
                 timezoneLocation: '시간대',
+                checking: '확인 중...',
+                notTested: '테스트되지 않음',
+                notTestedChina: '테스트되지 않음 (중국)',
+                networkInfo: '네트워크 정보',
+                notDetected: '감지되지 않음',
+                na: '해당 없음',
             },
             'es': {
                 title: 'Verificador de Dirección IP',
@@ -1382,6 +1412,12 @@
                 preferredLanguage: 'Idioma preferido',
                 utcOffset: 'Desplazamiento UTC',
                 timezoneLocation: 'Zona horaria',
+                checking: 'Verificando...',
+                notTested: 'No probado',
+                notTestedChina: 'No probado (CHINA)',
+                networkInfo: 'Información de red',
+                notDetected: 'No detectado',
+                na: 'N/A',
             },
             'fr': {
                 title: 'Vérificateur d\'adresse IP',
@@ -1454,6 +1490,12 @@
                 preferredLanguage: 'Langue préférée',
                 utcOffset: 'Décalage UTC',
                 timezoneLocation: 'Fuseau horaire',
+                checking: 'Vérification...',
+                notTested: 'Non testé',
+                notTestedChina: 'Non testé (CHINE)',
+                networkInfo: 'Informations réseau',
+                notDetected: 'Non détecté',
+                na: 'N/A',
             },
             'de': {
                 title: 'IP-Adresse Prüfer',
@@ -1526,6 +1568,12 @@
                 preferredLanguage: 'Bevorzugte Sprache',
                 utcOffset: 'UTC-Versatz',
                 timezoneLocation: 'Zeitzone',
+                checking: 'Überprüfung...',
+                notTested: 'Nicht getestet',
+                notTestedChina: 'Nicht getestet (CHINA)',
+                networkInfo: 'Netzwerkinformationen',
+                notDetected: 'Nicht erkannt',
+                na: 'N/V',
             },
             'it': {
                 title: 'Verificatore di Indirizzo IP',
@@ -1598,6 +1646,12 @@
                 preferredLanguage: 'Lingua preferita',
                 utcOffset: 'Offset UTC',
                 timezoneLocation: 'Fuso orario',
+                checking: 'Controllo...',
+                notTested: 'Non testato',
+                notTestedChina: 'Non testato (CINA)',
+                networkInfo: 'Informazioni di rete',
+                notDetected: 'Non rilevato',
+                na: 'N/D',
             },
             'pt': {
                 title: 'Verificador de Endereço IP',
@@ -1670,6 +1724,12 @@
                 preferredLanguage: 'Idioma preferido',
                 utcOffset: 'Deslocamento UTC',
                 timezoneLocation: 'Fuso horário',
+                checking: 'Verificando...',
+                notTested: 'Não testado',
+                notTestedChina: 'Não testado (CHINA)',
+                networkInfo: 'Informações de rede',
+                notDetected: 'Não detectado',
+                na: 'N/D',
             },
             'ru': {
                 title: 'Проверка IP-адреса',
@@ -1742,6 +1802,12 @@
                 preferredLanguage: 'Предпочитаемый язык',
                 utcOffset: 'Смещение UTC',
                 timezoneLocation: 'Часовой пояс',
+                checking: 'Проверка...',
+                notTested: 'Не тестировалось',
+                notTestedChina: 'Не тестировалось (КИТАЙ)',
+                networkInfo: 'Информация о сети',
+                notDetected: 'Не обнаружено',
+                na: 'Н/Д',
             },
             'ar': {
                 title: 'أداة فحص عنوان IP',
@@ -1814,6 +1880,12 @@
                 preferredLanguage: 'اللغة المفضلة',
                 utcOffset: 'إزاحة UTC',
                 timezoneLocation: 'المنطقة الزمنية',
+                checking: 'جاري الفحص...',
+                notTested: 'لم يتم الاختبار',
+                notTestedChina: 'لم يتم الاختبار (الصين)',
+                networkInfo: 'معلومات الشبكة',
+                notDetected: 'لم يتم الكشف',
+                na: 'غير متوفر',
             },
             'hi': {
                 title: 'IP पता जाँचकर्ता',
@@ -1886,6 +1958,12 @@
                 preferredLanguage: 'पसंदीदा भाषा',
                 utcOffset: 'UTC ऑफसेट',
                 timezoneLocation: 'समय क्षेत्र',
+                checking: 'जाँच हो रही है...',
+                notTested: 'परीक्षण नहीं किया गया',
+                notTestedChina: 'परीक्षण नहीं किया गया (चीन)',
+                networkInfo: 'नेटवर्क जानकारी',
+                notDetected: 'पता नहीं चला',
+                na: 'उपलब्ध नहीं',
             },
             'id': {
                 title: 'Pemeriksa Alamat IP',
@@ -1958,6 +2036,12 @@
                 preferredLanguage: 'Bahasa Pilihan',
                 utcOffset: 'Offset UTC',
                 timezoneLocation: 'Zona Waktu',
+                checking: 'Memeriksa...',
+                notTested: 'Tidak diuji',
+                notTestedChina: 'Tidak diuji (CHINA)',
+                networkInfo: 'Informasi Jaringan',
+                notDetected: 'Tidak terdeteksi',
+                na: 'T/A',
             },
             'th': {
                 title: 'ตัวตรวจสอบที่อยู่ IP',
@@ -2030,6 +2114,12 @@
                 preferredLanguage: 'ภาษาที่ต้องการ',
                 utcOffset: 'ออฟเซ็ต UTC',
                 timezoneLocation: 'เขตเวลา',
+                checking: 'กำลังตรวจสอบ...',
+                notTested: 'ไม่ได้ทดสอบ',
+                notTestedChina: 'ไม่ได้ทดสอบ (จีน)',
+                networkInfo: 'ข้อมูลเครือข่าย',
+                notDetected: 'ไม่พบ',
+                na: 'ไม่มี',
             },
             'vi': {
                 title: 'Công cụ Kiểm tra Địa chỉ IP',
@@ -2102,6 +2192,12 @@
                 preferredLanguage: 'Ngôn ngữ ưa thích',
                 utcOffset: 'Độ lệch UTC',
                 timezoneLocation: 'Múi giờ',
+                checking: 'Đang kiểm tra...',
+                notTested: 'Chưa kiểm tra',
+                notTestedChina: 'Chưa kiểm tra (TRUNG QUỐC)',
+                networkInfo: 'Thông tin mạng',
+                notDetected: 'Không phát hiện',
+                na: 'Không có',
             },
             'nl': {
                 title: 'IP-adres Controle',
@@ -2174,6 +2270,12 @@
                 preferredLanguage: 'Voorkeurstaal',
                 utcOffset: 'UTC-offset',
                 timezoneLocation: 'Tijdzone',
+                checking: 'Controleren...',
+                notTested: 'Niet getest',
+                notTestedChina: 'Niet getest (CHINA)',
+                networkInfo: 'Netwerkinformatie',
+                notDetected: 'Niet gedetecteerd',
+                na: 'N.v.t.',
             },
             'pl': {
                 title: 'Sprawdzanie adresu IP',
@@ -2246,6 +2348,12 @@
                 preferredLanguage: 'Preferowany język',
                 utcOffset: 'Przesunięcie UTC',
                 timezoneLocation: 'Strefa czasowa',
+                checking: 'Sprawdzanie...',
+                notTested: 'Nie przetestowano',
+                notTestedChina: 'Nie przetestowano (CHINY)',
+                networkInfo: 'Informacje o sieci',
+                notDetected: 'Nie wykryto',
+                na: 'Nie dotyczy',
             },
             'tr': {
                 title: 'IP Adresi Denetleyici',
@@ -2318,6 +2426,12 @@
                 preferredLanguage: 'Tercih Edilen Dil',
                 utcOffset: 'UTC Ofseti',
                 timezoneLocation: 'Saat Dilimi',
+                checking: 'Kontrol ediliyor...',
+                notTested: 'Test edilmedi',
+                notTestedChina: 'Test edilmedi (ÇİN)',
+                networkInfo: 'Ağ Bilgisi',
+                notDetected: 'Tespit edilmedi',
+                na: 'Yok',
             },
             'sv': {
                 title: 'IP-adress Kontroll',
@@ -2390,6 +2504,12 @@
                 preferredLanguage: 'Föredraget språk',
                 utcOffset: 'UTC-offset',
                 timezoneLocation: 'Tidszon',
+                checking: 'Kontrollerar...',
+                notTested: 'Inte testad',
+                notTestedChina: 'Inte testad (KINA)',
+                networkInfo: 'Nätverksinformation',
+                notDetected: 'Inte detekterad',
+                na: 'Ej tillämpligt',
             },
             'no': {
                 title: 'IP-adresse Sjekker',
@@ -2462,6 +2582,12 @@
                 preferredLanguage: 'Foretrukket språk',
                 utcOffset: 'UTC-forskyvning',
                 timezoneLocation: 'Tidssone',
+                checking: 'Kontrollerer...',
+                notTested: 'Ikke testet',
+                notTestedChina: 'Ikke testet (KINA)',
+                networkInfo: 'Nettverksinformasjon',
+                notDetected: 'Ikke oppdaget',
+                na: 'Ikke tilgjengelig',
             },
             'da': {
                 title: 'IP-adresse Checker',
@@ -2534,6 +2660,12 @@
                 preferredLanguage: 'Foretrukket sprog',
                 utcOffset: 'UTC-forskydning',
                 timezoneLocation: 'Tidszone',
+                checking: 'Kontrollerer...',
+                notTested: 'Ikke testet',
+                notTestedChina: 'Ikke testet (KINA)',
+                networkInfo: 'Netværksinformation',
+                notDetected: 'Ikke opdaget',
+                na: 'Ikke tilgængelig',
             },
             'fi': {
                 title: 'IP-osoitteen Tarkistin',
@@ -2606,6 +2738,12 @@
                 preferredLanguage: 'Ensisijainen kieli',
                 utcOffset: 'UTC-siirtymä',
                 timezoneLocation: 'Aikavyöhyke',
+                checking: 'Tarkistetaan...',
+                notTested: 'Ei testattu',
+                notTestedChina: 'Ei testattu (KIINA)',
+                networkInfo: 'Verkkotiedot',
+                notDetected: 'Ei havaittu',
+                na: 'Ei saatavilla',
             },
             'el': {
                 title: 'Έλεγχος διεύθυνσης IP',
@@ -2678,6 +2816,12 @@
                 preferredLanguage: 'Προτιμώμενη γλώσσα',
                 utcOffset: 'Μετατόπιση UTC',
                 timezoneLocation: 'Ζώνη ώρας',
+                checking: 'Έλεγχος...',
+                notTested: 'Δεν δοκιμάστηκε',
+                notTestedChina: 'Δεν δοκιμάστηκε (ΚΙΝΑ)',
+                networkInfo: 'Πληροφορίες δικτύου',
+                notDetected: 'Δεν ανιχνεύθηκε',
+                na: 'Μ/Δ',
             },
             'cs': {
                 title: 'Kontrola IP adresy',
@@ -2750,6 +2894,12 @@
                 preferredLanguage: 'Preferovaný jazyk',
                 utcOffset: 'Posun UTC',
                 timezoneLocation: 'Časové pásmo',
+                checking: 'Kontrola...',
+                notTested: 'Netestováno',
+                notTestedChina: 'Netestováno (ČÍNA)',
+                networkInfo: 'Informace o síti',
+                notDetected: 'Nezjištěno',
+                na: 'Není k dispozici',
             },
             'hu': {
                 title: 'IP-cím Ellenőrző',
@@ -2822,6 +2972,12 @@
                 preferredLanguage: 'Előnyben részesített nyelv',
                 utcOffset: 'UTC eltolás',
                 timezoneLocation: 'Időzóna',
+                checking: 'Ellenőrzés...',
+                notTested: 'Nem tesztelve',
+                notTestedChina: 'Nem tesztelve (KÍNA)',
+                networkInfo: 'Hálózati információk',
+                notDetected: 'Nem észlelve',
+                na: 'Nem elérhető',
             },
             'ro': {
                 title: 'Verificator Adresă IP',
@@ -2894,6 +3050,12 @@
                 preferredLanguage: 'Limbă preferată',
                 utcOffset: 'Decalaj UTC',
                 timezoneLocation: 'Fus orar',
+                checking: 'Verificare...',
+                notTested: 'Netestat',
+                notTestedChina: 'Netestat (CHINA)',
+                networkInfo: 'Informații rețea',
+                notDetected: 'Nedetectat',
+                na: 'Indisponibil',
             },
             'uk': {
                 title: 'Перевірка IP-адреси',
@@ -2966,6 +3128,12 @@
                 preferredLanguage: 'Бажана мова',
                 utcOffset: 'Зміщення UTC',
                 timezoneLocation: 'Часовий пояс',
+                checking: 'Перевірка...',
+                notTested: 'Не тестувалося',
+                notTestedChina: 'Не тестувалося (КИТАЙ)',
+                networkInfo: 'Інформація про мережу',
+                notDetected: 'Не виявлено',
+                na: 'Недоступно',
             },
             'he': {
                 title: 'בודק כתובת IP',
@@ -3038,6 +3206,12 @@
                 preferredLanguage: 'שפה מועדפת',
                 utcOffset: 'הסטה UTC',
                 timezoneLocation: 'אזור זמן',
+                checking: 'בודק...',
+                notTested: 'לא נבדק',
+                notTestedChina: 'לא נבדק (סין)',
+                networkInfo: 'מידע רשת',
+                notDetected: 'לא זוהה',
+                na: 'לא זמין',
             },
             'fa': {
                 title: 'بررسی‌کننده آدرس IP',
@@ -3110,6 +3284,12 @@
                 preferredLanguage: 'زبان ترجیحی',
                 utcOffset: 'جابجایی UTC',
                 timezoneLocation: 'منطقه زمانی',
+                checking: 'در حال بررسی...',
+                notTested: 'تست نشده',
+                notTestedChina: 'تست نشده (چین)',
+                networkInfo: 'اطلاعات شبکه',
+                notDetected: 'شناسایی نشد',
+                na: 'موجود نیست',
             },
         };
 
@@ -3233,6 +3413,17 @@
                     el.textContent = tr('loading');
                 }
             });
+
+            // Update DNS status text
+            const dnsStatusTitle = document.getElementById('dnsStatusTitle');
+            if (dnsStatusTitle && dnsStatusTitle.textContent === 'Checking DNS...') {
+                dnsStatusTitle.textContent = tr('checkingDns');
+            }
+
+            const dnsStatusDesc = document.getElementById('dnsStatusDesc');
+            if (dnsStatusDesc && dnsStatusDesc.textContent === 'Detecting your DNS servers') {
+                dnsStatusDesc.textContent = tr('detectingDns');
+            }
         }
 
         // IP checker sources configuration
@@ -3445,7 +3636,7 @@
                 </td>
                 <td class="ip-cell">
                     <div class="status-loading">
-                        <span class="spinner"></span>Checking...
+                        <span class="spinner"></span>${tr('checking')}
                     </div>
                 </td>
                 <td class="location-cell">
@@ -4300,8 +4491,8 @@
 
             // Different initial content for YouTube/Google vs others
             const latencyContent = isBlockedSite
-                ? '<span>Not tested</span>'
-                : '<span class="spinner"></span> Testing...';
+                ? `<span>${tr('notTested')}</span>`
+                : `<span class="spinner"></span> ${tr('testing')}...`;
 
             const latencyClass = isBlockedSite ? 'connectivity-latency skipped' : 'connectivity-latency';
 
@@ -4349,7 +4540,7 @@
                     latencyDiv.classList.remove('testing');
                     latencyDiv.classList.add('skipped');
                     latencyDiv.innerHTML = `
-                        <span>Not tested</span>
+                        <span>${tr('notTested')}</span>
                     `;
                     continue;
                 }
@@ -4448,14 +4639,14 @@
                     if (youtubeItem) {
                         const youtubeLatency = youtubeItem.querySelector('.connectivity-latency');
                         if (youtubeLatency) {
-                            youtubeLatency.innerHTML = '<span>Not tested (CHINA)</span>';
+                            youtubeLatency.innerHTML = `<span>${tr('notTestedChina')}</span>`;
                         }
                     }
 
                     if (googleItem) {
                         const googleLatency = googleItem.querySelector('.connectivity-latency');
                         if (googleLatency) {
-                            googleLatency.innerHTML = '<span>Not tested (CHINA)</span>';
+                            googleLatency.innerHTML = `<span>${tr('notTestedChina')}</span>`;
                         }
                     }
 
@@ -4513,7 +4704,7 @@
                 item.classList.add('testing');
                 latencyDiv.classList.remove('skipped');
                 latencyDiv.innerHTML = `
-                    <span class="spinner"></span> Testing...
+                    <span class="spinner"></span> ${tr('testing')}...
                 `;
 
                 const result = await testConnectivityMulti(test);
@@ -4783,21 +4974,21 @@
                 <div class="webrtc-server-header">
                     <div class="webrtc-server-name">${googleServer.icon} ${googleServer.name}</div>
                     <span class="webrtc-status-badge testing">
-                        <span class="webrtc-spinner"></span> Testing
+                        <span class="webrtc-spinner"></span> ${tr('testing')}
                     </span>
                 </div>
                 <div class="webrtc-server-url">${googleServer.url}</div>
                 <div class="webrtc-result-row">
-                    <span class="webrtc-result-label">IP Address:</span>
-                    <span class="webrtc-result-value">Detecting...</span>
+                    <span class="webrtc-result-label">${tr('ipAddress')}:</span>
+                    <span class="webrtc-result-value">${tr('detecting')}</span>
                 </div>
                 <div class="webrtc-result-row">
-                    <span class="webrtc-result-label">Network Info:</span>
-                    <span class="webrtc-result-value">Detecting...</span>
+                    <span class="webrtc-result-label">${tr('networkInfo')}:</span>
+                    <span class="webrtc-result-value">${tr('detecting')}</span>
                 </div>
                 <div class="webrtc-result-row">
-                    <span class="webrtc-result-label">Region:</span>
-                    <span class="webrtc-result-value">Detecting...</span>
+                    <span class="webrtc-result-label">${tr('region')}:</span>
+                    <span class="webrtc-result-value">${tr('detecting')}</span>
                 </div>
             `;
 
@@ -4843,21 +5034,21 @@
                     <div class="webrtc-server-header">
                         <div class="webrtc-server-name">${server.icon} ${server.name}</div>
                         <span class="webrtc-status-badge testing">
-                            <span class="webrtc-spinner"></span> Testing
+                            <span class="webrtc-spinner"></span> ${tr('testing')}
                         </span>
                     </div>
                     <div class="webrtc-server-url">${server.url}</div>
                     <div class="webrtc-result-row">
-                        <span class="webrtc-result-label">IP Address:</span>
-                        <span class="webrtc-result-value">Detecting...</span>
+                        <span class="webrtc-result-label">${tr('ipAddress')}:</span>
+                        <span class="webrtc-result-value">${tr('detecting')}</span>
                     </div>
                     <div class="webrtc-result-row">
-                        <span class="webrtc-result-label">Network Info:</span>
-                        <span class="webrtc-result-value">Detecting...</span>
+                        <span class="webrtc-result-label">${tr('networkInfo')}:</span>
+                        <span class="webrtc-result-value">${tr('detecting')}</span>
                     </div>
                     <div class="webrtc-result-row">
-                        <span class="webrtc-result-label">Region:</span>
-                        <span class="webrtc-result-value">Detecting...</span>
+                        <span class="webrtc-result-label">${tr('region')}:</span>
+                        <span class="webrtc-result-value">${tr('detecting')}</span>
                     </div>
                 `;
                 webrtcGrid.appendChild(item);
@@ -4918,12 +5109,12 @@
 
                     const badge = item.querySelector('.webrtc-status-badge');
                     badge.className = 'webrtc-status-badge failed';
-                    badge.textContent = '✗ Failed';
+                    badge.textContent = `✗ ${tr('failed')}`;
 
                     const resultValues = item.querySelectorAll('.webrtc-result-value');
-                    resultValues[0].textContent = 'Not detected';
-                    resultValues[1].textContent = 'N/A';
-                    resultValues[2].textContent = 'N/A';
+                    resultValues[0].textContent = tr('notDetected');
+                    resultValues[1].textContent = tr('na');
+                    resultValues[2].textContent = tr('na');
                 }
             } catch (error) {
                 console.error(`WebRTC test failed for ${server.name}:`, error);
@@ -4933,14 +5124,14 @@
                     const badge = item.querySelector('.webrtc-status-badge');
                     if (badge) {
                         badge.className = 'webrtc-status-badge failed';
-                        badge.textContent = '✗ Failed';
+                        badge.textContent = `✗ ${tr('failed')}`;
                     }
 
                     const resultValues = item.querySelectorAll('.webrtc-result-value');
                     if (resultValues.length >= 3) {
-                        resultValues[0].textContent = 'Failed';
-                        resultValues[1].textContent = 'N/A';
-                        resultValues[2].textContent = 'N/A';
+                        resultValues[0].textContent = tr('failed');
+                        resultValues[1].textContent = tr('na');
+                        resultValues[2].textContent = tr('na');
                     }
                 }
             }
