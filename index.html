@@ -3154,6 +3154,87 @@
             return t[key] || translations['en'][key] || key;
         }
 
+        // Update page title, lang, and meta description
+        document.documentElement.lang = currentLang;
+        document.title = tr('title');
+        document.querySelector('meta[name="description"]').setAttribute('content', tr('metaDesc'));
+
+        // Function to update all UI text elements
+        function updateUIText() {
+            // Update section titles
+            const connectivityTitle = document.querySelector('.connectivity-title');
+            if (connectivityTitle) connectivityTitle.textContent = tr('connectivityTest');
+
+            const webrtcTitle = document.querySelector('.webrtc-title');
+            if (webrtcTitle) webrtcTitle.textContent = tr('webrtcLeakTest');
+
+            const dnsTitle = document.querySelector('.dns-title');
+            if (dnsTitle) dnsTitle.textContent = tr('dnsLeakTest');
+
+            // Update info section titles
+            const infoTitles = document.querySelectorAll('.info-title');
+            if (infoTitles.length >= 6) {
+                infoTitles[0].textContent = tr('detectedInfo');
+                infoTitles[1].textContent = tr('systemInfo');
+                infoTitles[2].textContent = tr('screenInfo');
+                infoTitles[3].textContent = tr('pluginsInfo');
+                infoTitles[4].textContent = tr('mimeTypesInfo');
+                infoTitles[5].textContent = tr('httpHeaders');
+            }
+
+            // Update connectivity description
+            const connectivityDesc = document.querySelector('.connectivity-description');
+            if (connectivityDesc) {
+                const noteText = tr('connectivityNote');
+                const noteParts = noteText.split(':');
+                connectivityDesc.innerHTML = tr('connectivityDesc') + '<br><br><strong>' + noteParts[0] + ':</strong> ' + noteParts.slice(1).join(':');
+            }
+
+            // Update WebRTC description
+            const dnsDescs = document.querySelectorAll('.dns-description');
+            if (dnsDescs.length >= 1) {
+                dnsDescs[0].textContent = tr('webrtcDesc');
+            }
+            if (dnsDescs.length >= 2) {
+                dnsDescs[1].textContent = tr('dnsDesc');
+            }
+
+            // Update HTTP Headers description
+            const httpHeadersDescElems = document.querySelectorAll('.dns-description');
+            for (let elem of httpHeadersDescElems) {
+                if (elem.textContent.includes('httpbin.org') || elem.getAttribute('style')?.includes('margin-bottom: 15px')) {
+                    elem.textContent = tr('httpHeadersDesc');
+                    break;
+                }
+            }
+
+            // Update IP Summary labels
+            const summaryLabels = document.querySelectorAll('.ip-summary-label');
+            if (summaryLabels.length >= 8) {
+                summaryLabels[0].textContent = tr('ipAddress') + ':';
+                summaryLabels[1].textContent = tr('isp') + ':';
+                summaryLabels[2].textContent = 'ASN:';
+                summaryLabels[3].textContent = tr('country') + ':';
+                summaryLabels[4].textContent = tr('region') + ':';
+                summaryLabels[5].textContent = tr('city') + ':';
+                summaryLabels[6].textContent = tr('timezone') + ':';
+                summaryLabels[7].textContent = tr('latLon') + ':';
+            }
+
+            // Update initial loading/detecting text
+            const summaryIP = document.getElementById('summaryIP');
+            if (summaryIP && summaryIP.textContent === 'Detecting...') {
+                summaryIP.textContent = tr('detecting');
+            }
+
+            const loadingElements = document.querySelectorAll('.loading');
+            loadingElements.forEach(el => {
+                if (el.textContent === 'Loading...') {
+                    el.textContent = tr('loading');
+                }
+            });
+        }
+
         // IP checker sources configuration
         const ipCheckers = [
             // International sources - verified CORS support
@@ -4046,7 +4127,7 @@
                 // Failed
                 failCount++;
                 row.className = 'error';
-                ipCell.innerHTML = `<div class="status-error">Failed</div>`;
+                ipCell.innerHTML = `<div class="status-error">${tr('failed')}</div>`;
                 locationCell.innerHTML = `<span class="status-error">-</span>`;
             }
 
@@ -5627,6 +5708,7 @@
         // Execute after page load
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
+                updateUIText();
                 init();
                 runConnectivityTests();
                 testWebRTCLeak();
@@ -5639,6 +5721,7 @@
                 collectHTTPHeaders();
             });
         } else {
+            updateUIText();
             init();
             runConnectivityTests();
             testWebRTCLeak();
