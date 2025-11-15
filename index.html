@@ -3626,10 +3626,10 @@
 
         // Create table row
         function createTableRow(checker) {
-            const tr = document.createElement('tr');
-            tr.id = `row-${checker.name}`;
+            const row = document.createElement('tr');
+            row.id = `row-${checker.name}`;
             const domain = extractDomain(checker.url);
-            tr.innerHTML = `
+            row.innerHTML = `
                 <td class="source-cell">
                     <span class="source-flag" title="${domain}" data-domain="${domain}">${checker.flag}</span>
                     ${checker.name}
@@ -3645,13 +3645,13 @@
             `;
 
             // Add click event for mobile devices
-            const flagSpan = tr.querySelector('.source-flag');
+            const flagSpan = row.querySelector('.source-flag');
             flagSpan.addEventListener('click', function(e) {
                 e.stopPropagation();
                 showDomainTooltip(domain, e);
             });
 
-            return tr;
+            return row;
         }
 
         // Query IP geolocation with detailed info (location, ISP, ASN)
