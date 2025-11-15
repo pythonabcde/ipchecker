@@ -818,7 +818,7 @@
 <body>
     <div class="container">
         <div class="ip-summary-card">
-            <div class="ip-summary-title">Your IP Information</div>
+            <div class="ip-summary-title" id="ipSummaryTitle">Your IP Information</div>
             <div class="ip-summary-grid" id="ipSummaryGrid">
                 <div class="ip-summary-item">
                     <div class="ip-summary-label">IP:</div>
@@ -881,7 +881,7 @@
 
         <div class="connectivity-section">
             <div class="connectivity-title">Connectivity Test</div>
-            <div class="dns-description" style="margin-bottom: 15px; color: #888;">
+            <div class="dns-description" id="connectivityDescription" style="margin-bottom: 15px; color: #888;">
                 This tool only checks if your browser can access target websites. It cannot distinguish the cause of failure (website down, local network issues, ISP blocking, or firewall blocking will all show as "access failed").<br>
                 <strong>Note:</strong> Latency here measures full resource load time (DNS + TLS + redirects + download). It is not the same as ICMP ping.
             </div>
@@ -891,14 +891,14 @@
 
         <div class="webrtc-section">
             <div class="webrtc-title">WebRTC Leak Test</div>
-            <div class="dns-description" style="margin-bottom: 15px; color: #888;">This tool detects based on browser ICE candidates. Results are for reference only.</div>
+            <div class="dns-description" id="webrtcDescription" style="margin-bottom: 15px; color: #888;">This tool detects based on browser ICE candidates. Results are for reference only.</div>
             <div class="webrtc-grid" id="webrtcGrid">
             </div>
         </div>
 
         <div class="dns-section">
             <div class="dns-title">DNS Leak Test</div>
-            <div class="dns-description">Detects DNS servers based on public services and geolocation data. Results are best-effort estimates and cannot 100% confirm DNS "leaks".</div>
+            <div class="dns-description" id="dnsDescription">Detects DNS servers based on public services and geolocation data. Results are best-effort estimates and cannot 100% confirm DNS "leaks".</div>
             <div class="dns-status checking" id="dnsStatus">
                 <div class="dns-status-icon">🔍</div>
                 <div class="dns-status-text">
@@ -942,7 +942,7 @@
 
         <div class="info-section">
             <div class="info-title">HTTP Request Headers (to httpbin.org)</div>
-            <div class="dns-description" style="margin-bottom: 15px; color: #888;">This section uses a third-party service (httpbin.org) to echo your HTTP request headers. If the service is blocked or unreachable from your network, this section may not display any results.</div>
+            <div class="dns-description" id="httpHeadersDescription" style="margin-bottom: 15px; color: #888;">This section uses a third-party service (httpbin.org) to echo your HTTP request headers. If the service is blocked or unreachable from your network, this section may not display any results.</div>
             <div class="info-grid" id="httpHeaders">
             </div>
         </div>
@@ -3341,6 +3341,10 @@
 
         // Function to update all UI text elements
         function updateUIText() {
+            // Update IP Summary title
+            const ipSummaryTitle = document.getElementById('ipSummaryTitle');
+            if (ipSummaryTitle) ipSummaryTitle.textContent = tr('ipSummary');
+
             // Update section titles
             const connectivityTitle = document.querySelector('.connectivity-title');
             if (connectivityTitle) connectivityTitle.textContent = tr('connectivityTest');
@@ -3363,30 +3367,24 @@
             }
 
             // Update connectivity description
-            const connectivityDesc = document.querySelector('.connectivity-description');
-            if (connectivityDesc) {
+            const connectivityDescription = document.getElementById('connectivityDescription');
+            if (connectivityDescription) {
                 const noteText = tr('connectivityNote');
                 const noteParts = noteText.split(':');
-                connectivityDesc.innerHTML = tr('connectivityDesc') + '<br><br><strong>' + noteParts[0] + ':</strong> ' + noteParts.slice(1).join(':');
+                connectivityDescription.innerHTML = tr('connectivityDesc') + '<br><br><strong>' + noteParts[0] + ':</strong> ' + noteParts.slice(1).join(':');
             }
 
             // Update WebRTC description
-            const dnsDescs = document.querySelectorAll('.dns-description');
-            if (dnsDescs.length >= 1) {
-                dnsDescs[0].textContent = tr('webrtcDesc');
-            }
-            if (dnsDescs.length >= 2) {
-                dnsDescs[1].textContent = tr('dnsDesc');
-            }
+            const webrtcDescription = document.getElementById('webrtcDescription');
+            if (webrtcDescription) webrtcDescription.textContent = tr('webrtcDesc');
+
+            // Update DNS description
+            const dnsDescription = document.getElementById('dnsDescription');
+            if (dnsDescription) dnsDescription.textContent = tr('dnsDesc');
 
             // Update HTTP Headers description
-            const httpHeadersDescElems = document.querySelectorAll('.dns-description');
-            for (let elem of httpHeadersDescElems) {
-                if (elem.textContent.includes('httpbin.org') || elem.getAttribute('style')?.includes('margin-bottom: 15px')) {
-                    elem.textContent = tr('httpHeadersDesc');
-                    break;
-                }
-            }
+            const httpHeadersDescription = document.getElementById('httpHeadersDescription');
+            if (httpHeadersDescription) httpHeadersDescription.textContent = tr('httpHeadersDesc');
 
             // Update IP Summary labels
             const summaryLabels = document.querySelectorAll('.ip-summary-label');
